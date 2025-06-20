@@ -1,0 +1,25 @@
+#!/bin/bash
+# Niko's Personal Development Environment Launcher
+
+set -e
+
+# Source Nix if available
+if [ -f ~/.nix-profile/etc/profile.d/nix.sh ]; then
+    source ~/.nix-profile/etc/profile.d/nix.sh
+fi
+
+# Check if we're already in the dev environment
+if [ -n "$NIKO_DEV_ENV" ]; then
+    echo "🔄 Already in development environment!"
+    exit 0
+fi
+
+# Change to the personal dev config directory
+cd ~/.config/nix/personal-dev
+
+echo "🚀 Launching Niko's development environment..."
+echo "💡 Type 'exit' to return to your normal shell"
+
+# Enter the development shell
+export NIKO_DEV_ENV=1
+nix develop
