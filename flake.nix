@@ -57,9 +57,6 @@
           ];
           
           shellHook = ''
-            echo "🚀 Welcome to Niko's development environment!"
-            echo "📦 Available tools: rg, fd, bat, eza, jq, fzf, tmux, node, python3, rust"
-            
             # Set up aliases
             alias ll='eza -la'
             alias la='eza -a'
@@ -97,18 +94,18 @@ bindkey -M vicmd 'j' history-beginning-search-forward
 # Quick escape to normal mode
 bindkey -M viins 'jk' vi-cmd-mode
 
-# Better vim mode cursor
+# Better vim mode cursor (silent)
 function zle-keymap-select {
   if [[ $KEYMAP == vicmd ]] || [[ $1 = 'block' ]]; then
-    echo -ne '\e[1 q'  # Block cursor
+    echo -ne '\e[1 q' >/dev/tty 2>/dev/null  # Block cursor
   elif [[ $KEYMAP == main ]] || [[ $KEYMAP == viins ]] || [[ $1 = 'beam' ]]; then
-    echo -ne '\e[5 q'  # Beam cursor
+    echo -ne '\e[5 q' >/dev/tty 2>/dev/null  # Beam cursor
   fi
 }
 zle -N zle-keymap-select
 
-# Initialize cursor
-echo -ne '\e[5 q'
+# Initialize cursor (silent)
+echo -ne '\e[5 q' >/dev/tty 2>/dev/null
 
 # Load aliases
 alias ll='eza -la'
@@ -128,17 +125,8 @@ export EDITOR=vim
 export VISUAL=vim
 export RUST_BACKTRACE=1
 
-# Nice prompt with mode indicator
-autoload -U promptinit && promptinit
-function zle-line-init zle-keymap-select {
-  VIM_PROMPT="%{$fg_bold[yellow]%} [% NORMAL]%  %{$reset_color%}"
-  RPS1="''${''${KEYMAP/vicmd/$VIM_PROMPT}/(main|viins)/}"
-  zle reset-prompt
-}
-zle -N zle-line-init
-zle -N zle-keymap-select
-
-PROMPT='%F{green}%n@%m%f:%F{blue}%~%f%# '
+# Simple pencil prompt
+PROMPT='✏️  '
 
 # History settings
 HISTSIZE=10000
@@ -148,14 +136,11 @@ setopt HIST_IGNORE_DUPS
 setopt HIST_IGNORE_SPACE
 setopt SHARE_HISTORY
 
-# Completion
-autoload -U compinit && compinit
+# Completion (silent)
+autoload -U compinit && compinit -d "$ZDOTDIR/.zcompdump"
 EOF
 
-            echo "✨ Environment ready! Starting zsh with vim keybindings..."
-            echo "💡 Use 'jk' to quickly escape to normal mode, 'k/j' for history search"
-            
-            # Start zsh
+            # Start zsh quietly
             exec ${pkgs.zsh}/bin/zsh
           '';
         };
@@ -225,18 +210,18 @@ EOF
             # Quick escape to normal mode
             bindkey -M viins 'jk' vi-cmd-mode
             
-            # Better vim mode cursor
+            # Better vim mode cursor (silent)
             function zle-keymap-select {
               if [[ $KEYMAP == vicmd ]] || [[ $1 = 'block' ]]; then
-                echo -ne '\e[1 q'  # Block cursor
+                echo -ne '\e[1 q' >/dev/tty 2>/dev/null  # Block cursor
               elif [[ $KEYMAP == main ]] || [[ $KEYMAP == viins ]] || [[ $1 = 'beam' ]]; then
-                echo -ne '\e[5 q'  # Beam cursor
+                echo -ne '\e[5 q' >/dev/tty 2>/dev/null  # Beam cursor
               fi
             }
             zle -N zle-keymap-select
             
-            # Initialize cursor
-            echo -ne '\e[5 q'
+            # Initialize cursor (silent)
+            echo -ne '\e[5 q' >/dev/tty 2>/dev/null
             
             # Environment
             export EDITOR=vim
@@ -272,20 +257,11 @@ EOF
             setopt APPEND_HISTORY
             setopt INC_APPEND_HISTORY
             
-            # Completion
-            autoload -U compinit && compinit
+            # Completion (silent)
+            autoload -U compinit && compinit -d ~/.zcompdump
             
-            # Prompt with vim mode indicator
-            autoload -U promptinit && promptinit
-            function zle-line-init zle-keymap-select {
-              VIM_PROMPT="%{$fg_bold[yellow]%} [NORMAL]%{$reset_color%}"
-              RPS1="''${''${KEYMAP/vicmd/$VIM_PROMPT}/(main|viins)/}"
-              zle reset-prompt
-            }
-            zle -N zle-line-init
-            zle -N zle-keymap-select
-            
-            PROMPT='%F{green}%n@%m%f:%F{blue}%~%f%# '
+            # Simple pencil prompt
+            PROMPT='✏️  '
             ZSHRC
             
             # Create .gitconfig if it doesn't exist
