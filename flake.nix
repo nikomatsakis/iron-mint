@@ -44,8 +44,7 @@
             # Development languages and tools
             nodejs_20
             python3
-            rustc
-            cargo
+            rustup     # Rust toolchain installer
             corretto21     # Amazon Corretto Java 21
             
             # Documentation and site generators
@@ -69,6 +68,15 @@
             
             # Rust environment
             export RUST_BACKTRACE=1
+            
+            # Java environment
+            export JAVA_HOME=${pkgs.corretto21}
+            
+            # Initialize rustup if not already done (quietly)
+            if [ ! -d "$HOME/.rustup" ]; then
+              echo "🦀 Initializing Rust toolchain..."
+              rustup default stable >/dev/null 2>&1 || true
+            fi
             
             # Create zsh config for vim keybindings
             export ZDOTDIR="$PWD/.zsh"
