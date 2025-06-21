@@ -1,5 +1,5 @@
 #!/bin/bash
-# Niko's Personal Development Environment Launcher
+# Iron Mint Development Environment Launcher
 
 set -e
 
@@ -16,8 +16,11 @@ if [ -n "$IRON_MINT_ACTIVE" ]; then
     exit 0
 fi
 
-# Change to the personal dev config directory
-cd ~/.config/nix/personal-dev
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Change to the iron-mint directory
+cd "$SCRIPT_DIR"
 
 # Enter the development shell with marker
 export IRON_MINT_ACTIVE=1
