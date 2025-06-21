@@ -41,11 +41,16 @@
             fzf        # fuzzy finder
             tmux       # terminal multiplexer
             
-            # Development tools
+            # Development languages and tools
             nodejs_20
             python3
             rustc
             cargo
+            corretto21     # Amazon Corretto Java 21
+            
+            # Documentation and site generators
+            mdbook         # Rust-based markdown book generator
+            hugo           # Static site generator
             
             # Build tools
             gnumake

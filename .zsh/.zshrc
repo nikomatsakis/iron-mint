@@ -21,19 +21,6 @@ zle -N zle-keymap-select
 # Initialize cursor (silent)
 echo -ne '\e[5 q' >/dev/tty 2>/dev/null
 
-# Load aliases
-alias ll='eza -la'
-alias la='eza -a'
-alias ls='eza'
-alias cat='bat'
-alias find='fd'
-alias grep='rg'
-alias gs='git status'
-alias ga='git add'
-alias gc='git commit'
-alias gp='git push'
-alias gl='git log --oneline'
-
 # Environment
 export EDITOR=vim
 export VISUAL=vim
