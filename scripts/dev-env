@@ -6,20 +6,19 @@ set -e
 # Source Nix if available
 if [ -f ~/.nix-profile/etc/profile.d/nix.sh ]; then
     source ~/.nix-profile/etc/profile.d/nix.sh
+elif [ -f /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ]; then
+    source /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
 fi
 
 # Check if we're already in the dev environment
-if [ -n "$NIKO_DEV_ENV" ]; then
-    echo "🔄 Already in development environment!"
+if [ -n "$IRON_MINT_ACTIVE" ]; then
+    echo "🔄 Already in Iron Mint environment!"
     exit 0
 fi
 
 # Change to the personal dev config directory
 cd ~/.config/nix/personal-dev
 
-echo "🚀 Launching Niko's development environment..."
-echo "💡 Type 'exit' to return to your normal shell"
-
-# Enter the development shell
-export NIKO_DEV_ENV=1
+# Enter the development shell with marker
+export IRON_MINT_ACTIVE=1
 nix develop
