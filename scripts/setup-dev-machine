@@ -19,18 +19,25 @@ echo "📱 Detected OS: $OS"
 
 # Install Nix if not present
 if ! command -v nix &> /dev/null; then
-    echo "📦 Installing Nix..."
-    curl -L https://nixos.org/nix/install | sh
-    source ~/.nix-profile/etc/profile.d/nix.sh
+    echo "📦 Installing Nix with Determinate Systems installer..."
+    curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
+    source /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
 else
     echo "✅ Nix already installed"
-    source ~/.nix-profile/etc/profile.d/nix.sh
+    # Try to source nix environment
+    if [ -f /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ]; then
+        source /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+    elif [ -f ~/.nix-profile/etc/profile.d/nix.sh ]; then
+        source ~/.nix-profile/etc/profile.d/nix.sh
+    fi
 fi
 
-# Enable flakes
-echo "🔧 Enabling Nix flakes..."
+# Enable flakes (Determinate Systems installer enables this by default, but just in case)
+echo "🔧 Ensuring Nix flakes are enabled..."
 mkdir -p ~/.config/nix
-echo "experimental-features = nix-command flakes" > ~/.config/nix/nix.conf
+if ! grep -q "experimental-features.*flakes" ~/.config/nix/nix.conf 2>/dev/null; then
+    echo "experimental-features = nix-command flakes" >> ~/.config/nix/nix.conf
+fi
 
 # Clone or update personal dev config
 if [ ! -d ~/.config/nix/personal-dev ]; then

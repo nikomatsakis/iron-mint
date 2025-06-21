@@ -15,17 +15,17 @@ A Nix-based, cross-platform development environment that provides consistent too
 ### New Machine Setup
 
 ```bash
-# Install Nix (if not already installed)
-curl -L https://nixos.org/nix/install | sh
-source ~/.nix-profile/etc/profile.d/nix.sh
+# Install Nix with Determinate Systems installer (recommended)
+curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
+source /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
 
 # Clone this repo
 git clone git@github.com:nikomatsakis/iron-mint.git ~/.config/nix/personal-dev
 cd ~/.config/nix/personal-dev
 
-# Enable Nix flakes
+# Enable Nix flakes (usually enabled by default with Determinate Systems installer)
 mkdir -p ~/.config/nix
-echo "experimental-features = nix-command flakes" > ~/.config/nix/nix.conf
+echo "experimental-features = nix-command flakes" >> ~/.config/nix/nix.conf
 
 # Set up dotfiles
 nix build .#dotfiles
