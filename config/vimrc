@@ -1,0 +1,21 @@
+" Iron Mint Vim Configuration
+
+set number
+set tabstop=4
+set shiftwidth=4
+set expandtab
+set autoindent
+set smartindent
+syntax on
+set hlsearch
+set incsearch
+set ignorecase
+set smartcase
+
+" Modern vim improvements
+set wildmenu
+set wildmode=list:longest
+set backspace=indent,eol,start
+
+" Dark color scheme (falls back to default if not available)
+silent! colorscheme slate

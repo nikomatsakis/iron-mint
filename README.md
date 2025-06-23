@@ -30,6 +30,19 @@ Or add a simple alias:
 alias iron='~/dev/iron-mint/dev-env'
 ```
 
+## Uninstall
+
+To restore your original configuration:
+
+```bash
+~/dev/iron-mint/install.sh --uninstall
+```
+
+This will:
+- Show you all available backups (created during installation)
+- Let you choose which backup to restore
+- Restore your original `.zshrc`, `.vimrc`, and `.gitconfig`
+
 ## That's It!
 
 - **Everything lives in `~/dev/iron-mint/`** - no scattered config files
@@ -37,6 +50,7 @@ alias iron='~/dev/iron-mint/dev-env'
 - **Type `exit`** to leave Iron Mint and return to normal shell
 - **All your files and directories** work exactly the same
 - **Tools available**: rust, cargo, mdbook, hugo, java, rg, fd, bat, eza, jq, fzf, tmux
+- **Safe installation** - backups created automatically, easy uninstall
 
 ---
 

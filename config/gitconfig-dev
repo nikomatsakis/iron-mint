@@ -1,0 +1,18 @@
+# Iron Mint Git Configuration for ~/dev directory
+
+[user]
+    name = Niko Matsakis
+    email = niko@alum.mit.edu
+
+[core]
+    editor = vim
+    autocrlf = input
+
+[init]
+    defaultBranch = main
+
+[pull]
+    rebase = true
+
+[merge]
+    conflictstyle = diff3

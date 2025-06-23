@@ -1,8 +1,77 @@
 #!/bin/bash
 # One-liner installer for Iron Mint development environment
 # Usage: curl -sSL https://raw.githubusercontent.com/nikomatsakis/iron-mint/main/install.sh | bash
+# Uninstall: ~/dev/iron-mint/install.sh --uninstall
 
 set -e
+
+# Check for uninstall option
+if [[ "$1" == "--uninstall" ]]; then
+    echo "🗑️  Iron Mint Uninstaller"
+    echo ""
+    
+    # List available backups
+    backup_dirs=($(ls -1d ~/.dotfiles-backup-* 2>/dev/null | sort -r))
+    
+    if [ ${#backup_dirs[@]} -eq 0 ]; then
+        echo "❌ No backup directories found."
+        echo "   Cannot restore original configuration."
+        exit 1
+    fi
+    
+    echo "📋 Available backups:"
+    echo ""
+    for i in "${!backup_dirs[@]}"; do
+        dir="${backup_dirs[$i]}"
+        timestamp=$(basename "$dir" | sed 's/.*-backup-//')
+        date_formatted=$(date -d "${timestamp:0:8} ${timestamp:9:2}:${timestamp:11:2}:${timestamp:13:2}" 2>/dev/null || echo "$timestamp")
+        echo "  $((i+1)). $date_formatted"
+        
+        # Show what's in this backup
+        if [ -f "$dir/.zshrc" ]; then echo "      - .zshrc"; fi
+        if [ -f "$dir/.vimrc" ]; then echo "      - .vimrc"; fi
+        if [ -f "$dir/.gitconfig" ]; then echo "      - .gitconfig"; fi
+        echo ""
+    done
+    
+    echo -n "Select backup to restore (1-${#backup_dirs[@]}) or 'q' to quit: "
+    read -r choice
+    
+    if [[ "$choice" == "q" ]]; then
+        echo "👋 Uninstall cancelled."
+        exit 0
+    fi
+    
+    if ! [[ "$choice" =~ ^[0-9]+$ ]] || [ "$choice" -lt 1 ] || [ "$choice" -gt "${#backup_dirs[@]}" ]; then
+        echo "❌ Invalid choice."
+        exit 1
+    fi
+    
+    selected_backup="${backup_dirs[$((choice-1))]}"
+    echo ""
+    echo "🔄 Restoring from: $selected_backup"
+    
+    # Restore files
+    for file in .zshrc .vimrc .gitconfig; do
+        if [ -f "$selected_backup/$file" ]; then
+            if [ -s "$selected_backup/$file" ]; then
+                echo "   ✅ Restoring $file"
+                cp "$selected_backup/$file" ~/"$file"
+            else
+                echo "   🗑️  Removing $file (was created by Iron Mint)"
+                rm -f ~/"$file"
+            fi
+        fi
+    done
+    
+    echo ""
+    echo "✅ Configuration restored!"
+    echo "💡 Note: This only restored your dotfiles. Iron Mint is still in ~/dev/iron-mint"
+    echo "   To fully remove Iron Mint, you can:"
+    echo "   - Remove the directory: rm -rf ~/dev/iron-mint"
+    echo "   - Uninstall Nix if desired (see Nix documentation)"
+    exit 0
+fi
 
 echo "🚀 Installing Iron Mint Development Environment..."
 
@@ -43,6 +112,8 @@ fi
 # Clone or update iron-mint
 if [ -d ~/dev/iron-mint ]; then
     echo "🔄 Updating existing iron-mint..."
+    echo "💡 Tip: To uninstall, run: ~/dev/iron-mint/install.sh --uninstall"
+    echo ""
     cd ~/dev/iron-mint
     git pull
 else
@@ -56,7 +127,7 @@ cd ~/dev/iron-mint
 # Set up dotfiles
 echo "🏠 Setting up dotfiles..."
 nix build .#dotfiles
-./result/bin/setup-dotfiles
+bash ./result/bin/setup-dotfiles
 
 echo ""
 echo "✅ Iron Mint development environment installed successfully!"
