@@ -22,7 +22,6 @@
           buildInputs = with pkgs; [
             # Core utilities
             bash
-            zsh
             coreutils
             git
             curl
@@ -45,7 +44,6 @@
             nodejs_20
             python3
             rustup     # Rust toolchain installer
-            corretto21     # Amazon Corretto Java 21
             
             # Documentation and site generators
             mdbook         # Rust-based markdown book generator
@@ -68,9 +66,6 @@
             
             # Rust environment
             export RUST_BACKTRACE=1
-            
-            # Java environment
-            export JAVA_HOME=${pkgs.corretto21}
             
             # Initialize rustup if not already done (quietly)
             if [ ! -d "$HOME/.rustup" ]; then

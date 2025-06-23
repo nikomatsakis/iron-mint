@@ -45,5 +45,5 @@ fi
 
 # Auto-start Iron Mint development environment
 if [[ -z "$IRON_MINT_ACTIVE" && -t 0 ]]; then
-    exec ~/dev/iron-mint/dev-env
+    ~/dev/iron-mint/dev-env
 fi
