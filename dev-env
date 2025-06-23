@@ -19,9 +19,8 @@ fi
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Change to the iron-mint directory
+# Preserve current working directory and use it as the active marker
+ORIGINAL_PWD="$(pwd)"
+export IRON_MINT_ACTIVE="$ORIGINAL_PWD"
 cd "$SCRIPT_DIR"
-
-# Enter the development shell with marker
-export IRON_MINT_ACTIVE=1
-nix develop
+exec nix develop

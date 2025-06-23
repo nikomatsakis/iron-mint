@@ -125,6 +125,11 @@ setopt SHARE_HISTORY
 autoload -U compinit && compinit -d "$ZDOTDIR/.zcompdump"
 EOF
 
+            # Change to the original directory if IRON_MINT_ACTIVE contains a path
+            if [ -n "$IRON_MINT_ACTIVE" ] && [ "$IRON_MINT_ACTIVE" != "1" ]; then
+              cd "$IRON_MINT_ACTIVE"
+            fi
+            
             # Start zsh quietly
             exec ${pkgs.zsh}/bin/zsh
           '';
@@ -241,7 +246,7 @@ GITCONFIG
             echo "✅ Dotfiles setup complete!"
             echo "📁 Backups saved to: $backup_dir"
             echo "🔄 Run 'source ~/.bashrc' or start a new shell to apply changes"
-            EOF
+EOF
             
             chmod +x $out/bin/setup-dotfiles
           '';
