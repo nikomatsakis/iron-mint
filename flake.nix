@@ -12,16 +12,16 @@
     forAllSystems = nixpkgs.lib.genAttrs systems;
   in {
     
-    # Personal development shell - your preferred environment
-    devShells = forAllSystems (system: 
+    # Package set containing all Iron Mint tools
+    packages = forAllSystems (system:
       let pkgs = nixpkgs.legacyPackages.${system};
       in {
-        default = pkgs.mkShell {
-          name = "niko-dev-env";
-          
-          buildInputs = with pkgs; [
+        default = pkgs.buildEnv {
+          name = "iron-mint-tools";
+          paths = with pkgs; [
             # Core utilities
             bash
+            zsh
             coreutils
             git
             curl
@@ -60,85 +60,7 @@
             # Image processing
             imagemagick
           ];
-          
-          shellHook = ''
-            # Set preferred editor and shell
-            export EDITOR=vim
-            export VISUAL=vim
-            export SHELL=${pkgs.zsh}/bin/zsh
-            
-            # Rust environment
-            export RUST_BACKTRACE=1
-            
-            # Initialize rustup if not already done (quietly)
-            if [ ! -d "$HOME/.rustup" ]; then
-              echo "🦀 Initializing Rust toolchain..."
-              rustup default stable >/dev/null 2>&1 || true
-            fi
-            
-            # Create zsh config for vim keybindings
-            export ZDOTDIR="$PWD/.zsh"
-            mkdir -p "$ZDOTDIR"
-            cat > "$ZDOTDIR/.zshrc" << 'EOF'
-# Enable vim keybindings
-bindkey -v
-
-# Better history search with vim keys
-bindkey -M vicmd 'k' history-beginning-search-backward
-bindkey -M vicmd 'j' history-beginning-search-forward
-
-# Quick escape to normal mode
-bindkey -M viins 'jk' vi-cmd-mode
-
-# Better vim mode cursor (silent)
-function zle-keymap-select {
-  if [[ $KEYMAP == vicmd ]] || [[ $1 = 'block' ]]; then
-    echo -ne '\e[1 q' >/dev/tty 2>/dev/null  # Block cursor
-  elif [[ $KEYMAP == main ]] || [[ $KEYMAP == viins ]] || [[ $1 = 'beam' ]]; then
-    echo -ne '\e[5 q' >/dev/tty 2>/dev/null  # Beam cursor
-  fi
-}
-zle -N zle-keymap-select
-
-# Initialize cursor (silent)
-echo -ne '\e[5 q' >/dev/tty 2>/dev/null
-
-# Environment
-export EDITOR=vim
-export VISUAL=vim
-export RUST_BACKTRACE=1
-
-# Simple pencil prompt
-PROMPT='✏️  '
-
-# History settings
-HISTSIZE=10000
-SAVEHIST=10000
-HISTFILE="$ZDOTDIR/.zsh_history"
-setopt HIST_IGNORE_DUPS
-setopt HIST_IGNORE_SPACE
-setopt SHARE_HISTORY
-
-# Completion (silent)
-autoload -U compinit && compinit -d "$ZDOTDIR/.zcompdump"
-EOF
-
-            # Change to the original directory if IRON_MINT_ACTIVE contains a path
-            if [ -n "$IRON_MINT_ACTIVE" ] && [ "$IRON_MINT_ACTIVE" != "1" ]; then
-              cd "$IRON_MINT_ACTIVE"
-            fi
-            
-            # Start zsh quietly
-            exec ${pkgs.zsh}/bin/zsh
-          '';
         };
-      }
-    );
-    
-    # Home configuration package (for dotfiles)
-    packages = forAllSystems (system:
-      let pkgs = nixpkgs.legacyPackages.${system};
-      in {
         
         # Install your preferred dotfiles
         dotfiles = pkgs.stdenv.mkDerivation {
@@ -151,7 +73,23 @@ EOF
             #!/bin/bash
             set -e
             
-            echo "🏠 Setting up Niko's dotfiles..."
+            echo "🏠 Setting up Iron Mint..."
+            
+            # Detect current shell
+            current_shell=$(basename "$SHELL")
+            echo "🐚 Detected shell: $current_shell"
+            
+            if [[ "$current_shell" != "zsh" && "$current_shell" != "bash" ]]; then
+                echo "⚠️  Warning: Iron Mint is designed for zsh or bash"
+                echo "   Your current shell is: $SHELL"
+                echo "   Iron Mint may not work correctly with other shells."
+                read -p "   Continue anyway? (y/N) " -n 1 -r
+                echo
+                if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+                    echo "Setup cancelled."
+                    exit 1
+                fi
+            fi
             
             # Backup existing files
             backup_dir="$HOME/.dotfiles-backup-$(date +%Y%m%d-%H%M%S)"
@@ -184,36 +122,53 @@ endif
 VIMRC
             fi
             
-            # Add Iron Mint configuration to existing .zshrc
-            iron_mint_source='# Iron Mint development environment'
-            if [ -f ~/.zshrc ]; then
-                # Check if Iron Mint config is already sourced
-                if ! grep -q "iron-mint/config/zshrc" ~/.zshrc; then
-                    echo "📝 Adding Iron Mint configuration to existing .zshrc..."
-                    # Backup the existing .zshrc before modifying
-                    cp ~/.zshrc "$backup_dir/"
-                    echo "" >> ~/.zshrc
-                    echo "$iron_mint_source" >> ~/.zshrc
-                    echo 'if [ -f ~/dev/iron-mint/config/zshrc ]; then' >> ~/.zshrc
-                    echo '    source ~/dev/iron-mint/config/zshrc' >> ~/.zshrc
-                    echo 'fi' >> ~/.zshrc
-                else
-                    echo "✅ Iron Mint configuration already present in .zshrc"
-                fi
-            else
-                echo "📝 Creating new .zshrc with Iron Mint configuration..."
-                # Mark that this file was created by Iron Mint
-                touch "$backup_dir/.zshrc"
-                cat > ~/.zshrc << 'ZSHRC'
-# Basic Zsh Configuration
+            # Configure shell-specific RC file
+            if [[ "$current_shell" == "zsh" ]]; then
+                rc_file="$HOME/.zshrc"
+                shell_name="zsh"
+                default_config='# Basic Zsh Configuration
 autoload -Uz compinit
 compinit
 
 # Iron Mint development environment
-if [ -f ~/dev/iron-mint/config/zshrc ]; then
-    source ~/dev/iron-mint/config/zshrc
-fi
-ZSHRC
+source ~/dev/iron-mint/config/multi-shrc'
+            elif [[ "$current_shell" == "bash" ]]; then
+                rc_file="$HOME/.bashrc"
+                shell_name="bash"
+                default_config='# Basic Bash Configuration
+
+# Iron Mint development environment
+source ~/dev/iron-mint/config/multi-shrc'
+            else
+                # Fallback to zsh config for unknown shells
+                rc_file="$HOME/.zshrc"
+                shell_name="zsh"
+                default_config='# Basic Zsh Configuration
+autoload -Uz compinit
+compinit
+
+# Iron Mint development environment
+source ~/dev/iron-mint/config/multi-shrc'
+            fi
+            
+            # Add Iron Mint configuration to existing RC file
+            if [ -f "$rc_file" ]; then
+                # Check if Iron Mint config is already sourced
+                if ! grep -q "iron-mint/config/multi-shrc" "$rc_file"; then
+                    echo "📝 Adding Iron Mint configuration to existing .$shell_name rc..."
+                    # Backup the existing RC file before modifying
+                    cp "$rc_file" "$backup_dir/"
+                    echo "" >> "$rc_file"
+                    echo "# Iron Mint development environment" >> "$rc_file"
+                    echo 'source ~/dev/iron-mint/config/multi-shrc' >> "$rc_file"
+                else
+                    echo "✅ Iron Mint configuration already present in .$shell_name rc"
+                fi
+            else
+                echo "📝 Creating new .$shell_name rc with Iron Mint configuration..."
+                # Mark that this file was created by Iron Mint
+                touch "$backup_dir/$(basename "$rc_file")"
+                echo "$default_config" > "$rc_file"
             fi
             
             # Add Iron Mint configuration to existing .gitconfig
@@ -241,9 +196,13 @@ ZSHRC
 GITCONFIG
             fi
             
-            echo "✅ Dotfiles setup complete!"
+            echo "✅ Iron Mint setup complete!"
             echo "📁 Backups saved to: $backup_dir"
-            echo "🔄 Run 'source ~/.bashrc' or start a new shell to apply changes"
+            echo ""
+            echo "📦 To install Iron Mint packages, run:"
+            echo "   nix profile install ~/dev/iron-mint"
+            echo ""
+            echo "🔄 Then restart your shell or run: source ~/.zshrc"
 EOF
             
             chmod +x $out/bin/setup-dotfiles

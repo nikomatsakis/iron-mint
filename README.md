@@ -6,29 +6,18 @@
 curl -sSL https://raw.githubusercontent.com/nikomatsakis/iron-mint/main/install.sh | bash
 ```
 
-## Start Iron Mint
+This will:
+1. Install Nix if needed
+2. Clone Iron Mint to `~/dev/iron-mint/`
+3. Add Iron Mint configuration to your `.zshrc`
+4. Install all Iron Mint tools
 
-```bash
-~/dev/iron-mint/dev-env
-```
+## That's It!
 
-## Make It Your Default Shell (Optional)
-
-Add this to the end of your `~/.bashrc` or `~/.zshrc`:
-
-```bash
-# Auto-start Iron Mint development environment
-if [[ -z "$IRON_MINT_ACTIVE" && -t 0 ]]; then
-    export IRON_MINT_ACTIVE=1
-    ~/dev/iron-mint/dev-env
-fi
-```
-
-Or add a simple alias:
-
-```bash
-alias iron='~/dev/iron-mint/dev-env'
-```
+Restart your shell and you'll have:
+- **Vi keybindings** in zsh with `jk` to escape
+- **Pencil prompt**: `✏️  `
+- **All tools available** in your PATH
 
 ## Uninstall
 
@@ -43,14 +32,20 @@ This will:
 - Let you choose which backup to restore
 - Restore your original `.zshrc`, `.vimrc`, and `.gitconfig`
 
-## That's It!
+## Tools Available
 
-- **Everything lives in `~/dev/iron-mint/`** - no scattered config files
-- **No PATH modifications** - just run the script directly
-- **Type `exit`** to leave Iron Mint and return to normal shell
-- **All your files and directories** work exactly the same
-- **Tools available**: rust, cargo, mdbook, hugo, java, rg, fd, bat, eza, jq, fzf, tmux
+- **Languages**: rustup, nodejs, python3
+- **Modern CLI**: ripgrep (rg), fd, bat, eza, jq, fzf
+- **Editors**: vim, neovim  
+- **Build tools**: make, gcc
+- **Other**: tmux, git, curl, wget, imagemagick, mdbook, hugo
+
+## Features
+
+- **Minimal setup** - just adds one line to your `.zshrc`
+- **Everything in `~/dev/iron-mint/`** - no scattered config files
 - **Safe installation** - backups created automatically, easy uninstall
+- **Works with your existing setup** - doesn't replace your configuration
 
 ---
 

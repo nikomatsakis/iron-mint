@@ -87,6 +87,22 @@ fi
 
 echo "📱 Detected OS: $OS"
 
+# Check shell
+current_shell=$(basename "$SHELL")
+echo "🐚 Detected shell: $current_shell"
+
+if [[ "$current_shell" != "zsh" && "$current_shell" != "bash" ]]; then
+    echo "⚠️  Warning: Iron Mint is designed for zsh or bash"
+    echo "   Your current shell is: $SHELL"
+    echo "   Iron Mint may not work correctly with other shells."
+    read -p "   Continue anyway? (y/N) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "Setup cancelled."
+        exit 1
+    fi
+fi
+
 # Install Nix if not present
 if ! command -v nix &> /dev/null; then
     echo "📦 Installing Nix with Determinate Systems installer..."
@@ -124,17 +140,22 @@ fi
 
 cd ~/dev/iron-mint
 
-# Set up dotfiles
+# Set up dotfiles  
 echo "🏠 Setting up dotfiles..."
 nix build .#dotfiles
 bash ./result/bin/setup-dotfiles
 
+# Install Iron Mint tools
+echo ""
+echo "📦 Installing Iron Mint tools..."
+nix profile install .
+
 echo ""
 echo "✅ Iron Mint development environment installed successfully!"
 echo ""
-echo "🚀 Iron Mint will start automatically in new terminal sessions"
-echo ""
-echo "💡 To start Iron Mint in current session:"
+echo "💡 To activate in current session:"
 echo "   source ~/.zshrc"
+echo ""
+echo "🚀 New terminal sessions will automatically have Iron Mint configuration"
 echo ""
 echo "📚 See README.md for more information"
