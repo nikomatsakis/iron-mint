@@ -19,6 +19,8 @@
         default = pkgs.buildEnv {
           name = "iron-mint-tools";
           paths = with pkgs; [
+            # Iron Mint maintenance script
+            (pkgs.writeScriptBin "iron-mint" (builtins.readFile ./scripts/iron-mint))
             # Core utilities
             bash
             zsh

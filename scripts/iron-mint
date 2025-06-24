@@ -1,0 +1,339 @@
+#!/bin/bash
+# Iron Mint maintenance script
+# Simplifies common package management tasks
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+IRON_MINT_DIR="$(dirname "$SCRIPT_DIR")"
+
+show_help() {
+    cat << EOF
+Iron Mint - Package Management Made Simple
+
+USAGE:
+    iron-mint <command> [options]
+
+COMMANDS:
+    install            Install Iron Mint on this system
+    uninstall          Remove Iron Mint from this system
+    
+    add <package>       Add a package locally (just for you)
+    remove <package>    Remove a local package
+    list               Show all installed packages
+    
+    update             Update to latest Iron Mint packages
+    sync               Pull latest Iron Mint changes and update packages
+    
+    edit               Add a package to Iron Mint itself (opens editor)
+    
+    status             Show current Iron Mint status
+    help               Show this help
+
+EXAMPLES:
+    iron-mint install              # Install Iron Mint on new system
+    iron-mint uninstall            # Remove Iron Mint completely
+    iron-mint add docker           # Add docker locally
+    iron-mint remove docker        # Remove docker
+    iron-mint sync                 # Pull git changes + update packages
+    iron-mint edit                 # Add packages to Iron Mint itself
+
+EOF
+}
+
+add_package() {
+    local package="$1"
+    if [[ -z "$package" ]]; then
+        echo "❌ Error: Package name required"
+        echo "Usage: iron-mint add <package>"
+        exit 1
+    fi
+    
+    # Add nixpkgs# prefix if not specified
+    if [[ "$package" != *"#"* ]]; then
+        package="nixpkgs#$package"
+    fi
+    
+    echo "📦 Adding package: $package"
+    nix profile install "$package"
+    echo "✅ Package added successfully!"
+}
+
+remove_package() {
+    local package="$1"
+    if [[ -z "$package" ]]; then
+        echo "❌ Error: Package name required"
+        echo "Usage: iron-mint remove <package>"
+        exit 1
+    fi
+    
+    echo "🗑️  Removing package: $package"
+    nix profile remove ".*$package.*"
+    echo "✅ Package removed successfully!"
+}
+
+list_packages() {
+    echo "📋 Installed packages:"
+    echo ""
+    nix profile list
+}
+
+update_iron_mint() {
+    echo "🔄 Updating Iron Mint packages..."
+    cd "$IRON_MINT_DIR"
+    nix profile upgrade '.*iron-mint.*'
+    echo "✅ Iron Mint packages updated!"
+}
+
+sync_iron_mint() {
+    echo "🔄 Syncing with latest Iron Mint..."
+    cd "$IRON_MINT_DIR"
+    
+    echo "📥 Pulling latest changes..."
+    git pull
+    
+    echo "📦 Updating packages..."
+    nix profile upgrade '.*iron-mint.*'
+    
+    echo "✅ Sync complete!"
+}
+
+edit_iron_mint() {
+    echo "✏️  Opening Iron Mint flake for editing..."
+    echo ""
+    echo "To add a package to Iron Mint:"
+    echo "1. Find the 'paths = with pkgs; [' section"
+    echo "2. Add your package to the list"
+    echo "3. Save and exit"
+    echo "4. Run 'iron-mint sync' to apply changes"
+    echo ""
+    
+    ${EDITOR:-vim} "$IRON_MINT_DIR/flake.nix"
+}
+
+install_iron_mint() {
+    echo "🚀 Installing Iron Mint Development Environment..."
+    
+    # Detect OS
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        OS="macos"
+    elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        OS="linux"
+    else
+        echo "❌ Unsupported OS: $OSTYPE"
+        exit 1
+    fi
+    
+    echo "📱 Detected OS: $OS"
+    
+    # Check shell
+    current_shell=$(basename "$SHELL")
+    echo "🐚 Detected shell: $current_shell"
+    
+    if [[ "$current_shell" != "zsh" && "$current_shell" != "bash" ]]; then
+        echo "⚠️  Warning: Iron Mint is designed for zsh or bash"
+        echo "   Your current shell is: $SHELL"
+        echo "   Iron Mint may not work correctly with other shells."
+        read -p "   Continue anyway? (y/N) " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            echo "Setup cancelled."
+            exit 1
+        fi
+    fi
+    
+    # Install Nix if not present
+    if ! command -v nix &> /dev/null; then
+        echo "📦 Installing Nix with Determinate Systems installer..."
+        curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
+        
+        # Source nix environment
+        if [ -f /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ]; then
+            source /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+        elif [ -f ~/.nix-profile/etc/profile.d/nix.sh ]; then
+            source ~/.nix-profile/etc/profile.d/nix.sh
+        fi
+    else
+        echo "✅ Nix already installed"
+    fi
+    
+    # Enable flakes
+    echo "🔧 Ensuring Nix flakes are enabled..."
+    mkdir -p ~/.config/nix
+    if ! grep -q "experimental-features.*flakes" ~/.config/nix/nix.conf 2>/dev/null; then
+        echo "experimental-features = nix-command flakes" >> ~/.config/nix/nix.conf
+    fi
+    
+    # Clone or update iron-mint
+    if [ -d ~/dev/iron-mint ]; then
+        echo "🔄 Updating existing iron-mint..."
+        cd ~/dev/iron-mint
+        git pull
+    else
+        echo "📁 Cloning iron-mint..."
+        mkdir -p ~/dev
+        git clone https://github.com/nikomatsakis/iron-mint.git ~/dev/iron-mint
+        cd ~/dev/iron-mint
+    fi
+    
+    # Set up dotfiles
+    echo "🏠 Setting up dotfiles..."
+    nix build .#dotfiles
+    bash ./result/bin/setup-dotfiles
+    
+    # Install Iron Mint tools
+    echo ""
+    echo "📦 Installing Iron Mint tools..."
+    nix profile install .
+    
+    echo ""
+    echo "✅ Iron Mint development environment installed successfully!"
+    echo ""
+    echo "💡 To activate in current session:"
+    echo "   source ~/.${current_shell}rc"
+    echo ""
+    echo "🚀 New terminal sessions will automatically have Iron Mint configuration"
+}
+
+uninstall_iron_mint() {
+    echo "🗑️  Iron Mint Uninstaller"
+    echo ""
+    
+    # List available backups
+    backup_dirs=($(ls -1d ~/.dotfiles-backup-* 2>/dev/null | sort -r))
+    
+    if [ ${#backup_dirs[@]} -eq 0 ]; then
+        echo "❌ No backup directories found."
+        echo "   Cannot restore original configuration."
+        echo "   You may need to manually remove Iron Mint lines from your RC files."
+        exit 1
+    fi
+    
+    echo "📋 Available backups:"
+    echo ""
+    for i in "${!backup_dirs[@]}"; do
+        dir="${backup_dirs[$i]}"
+        timestamp=$(basename "$dir" | sed 's/.*-backup-//')
+        date_formatted=$(date -d "${timestamp:0:8} ${timestamp:9:2}:${timestamp:11:2}:${timestamp:13:2}" 2>/dev/null || echo "$timestamp")
+        echo "  $((i+1)). $date_formatted"
+        
+        # Show what's in this backup
+        if [ -f "$dir/.zshrc" ]; then echo "      - .zshrc"; fi
+        if [ -f "$dir/.bashrc" ]; then echo "      - .bashrc"; fi
+        if [ -f "$dir/.vimrc" ]; then echo "      - .vimrc"; fi
+        if [ -f "$dir/.gitconfig" ]; then echo "      - .gitconfig"; fi
+        echo ""
+    done
+    
+    echo -n "Select backup to restore (1-${#backup_dirs[@]}) or 'q' to quit: "
+    read -r choice
+    
+    if [[ "$choice" == "q" ]]; then
+        echo "👋 Uninstall cancelled."
+        exit 0
+    fi
+    
+    if ! [[ "$choice" =~ ^[0-9]+$ ]] || [ "$choice" -lt 1 ] || [ "$choice" -gt "${#backup_dirs[@]}" ]; then
+        echo "❌ Invalid choice."
+        exit 1
+    fi
+    
+    selected_backup="${backup_dirs[$((choice-1))]}"
+    echo ""
+    echo "🔄 Restoring from: $selected_backup"
+    
+    # Restore files
+    for file in .zshrc .bashrc .vimrc .gitconfig; do
+        if [ -f "$selected_backup/$file" ]; then
+            if [ -s "$selected_backup/$file" ]; then
+                echo "   ✅ Restoring $file"
+                cp "$selected_backup/$file" ~/"$file"
+            else
+                echo "   🗑️  Removing $file (was created by Iron Mint)"
+                rm -f ~/"$file"
+            fi
+        fi
+    done
+    
+    # Remove Iron Mint packages from profile
+    echo ""
+    echo "📦 Removing Iron Mint packages..."
+    nix profile remove '.*iron-mint.*' 2>/dev/null || echo "   No Iron Mint packages found in profile"
+    
+    echo ""
+    echo "✅ Configuration restored!"
+    echo "💡 Note: Iron Mint directory still exists at ~/dev/iron-mint"
+    echo "   To fully remove Iron Mint:"
+    echo "   - Remove the directory: rm -rf ~/dev/iron-mint"
+    echo "   - Uninstall Nix if desired (see Nix documentation)"
+}
+
+show_status() {
+    echo "📊 Iron Mint Status"
+    echo ""
+    
+    echo "📁 Location: $IRON_MINT_DIR"
+    echo "🐚 Shell: $(basename "$SHELL")"
+    
+    if [ -d "$IRON_MINT_DIR/.git" ]; then
+        cd "$IRON_MINT_DIR"
+        if git status --porcelain | grep -q .; then
+            echo "🔧 Local changes: Yes"
+        else
+            echo "✅ Local changes: None"
+        fi
+        
+        local current_branch=$(git branch --show-current 2>/dev/null || echo "unknown")
+        local commits_ahead=$(git rev-list --count @{u}..HEAD 2>/dev/null || echo "0")
+        echo "🌳 Branch: $current_branch"
+        if [[ "$commits_ahead" -gt 0 ]]; then
+            echo "⚡ Commits ahead: $commits_ahead"
+        fi
+    else
+        echo "❌ Not a git repository"
+    fi
+    
+    echo ""
+    echo "📦 Iron Mint packages installed:"
+    nix profile list | grep iron-mint || echo "   None found"
+}
+
+# Main command dispatcher
+case "${1:-help}" in
+    install)
+        install_iron_mint
+        ;;
+    uninstall)
+        uninstall_iron_mint
+        ;;
+    add)
+        add_package "$2"
+        ;;
+    remove)
+        remove_package "$2"
+        ;;
+    list)
+        list_packages
+        ;;
+    update)
+        update_iron_mint
+        ;;
+    sync)
+        sync_iron_mint
+        ;;
+    edit)
+        edit_iron_mint
+        ;;
+    status)
+        show_status
+        ;;
+    help|--help|-h)
+        show_help
+        ;;
+    *)
+        echo "❌ Unknown command: $1"
+        echo ""
+        show_help
+        exit 1
+        ;;
+esac
