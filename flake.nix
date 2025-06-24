@@ -56,6 +56,9 @@
             # Network tools
             openssh
             rsync
+            
+            # Image processing
+            imagemagick
           ];
           
           shellHook = ''
