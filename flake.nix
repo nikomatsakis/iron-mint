@@ -50,6 +50,7 @@
             # Documentation and site generators
             mdbook         # Rust-based markdown book generator
             hugo           # Static site generator
+            pandoc
             
             # Build tools
             gnumake
