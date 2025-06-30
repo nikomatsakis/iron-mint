@@ -17,14 +17,15 @@ This will:
 1. Install Nix if needed
 2. Clone Iron Mint to `~/dev/iron-mint/`
 3. Add Iron Mint configuration to your shell RC file
-4. Install all Iron Mint tools
+4. Install all Iron Mint tools (including proto for project version management)
 
 ## That's It!
 
 Restart your shell and you'll have:
 - **Vi keybindings** with `jk` to escape (zsh and bash)
 - **Pencil prompt**: `✏️  `
-- **All tools available** in your PATH
+- **Modern CLI tools** in your PATH (ripgrep, fzf, bat, etc.)  
+- **proto** for managing project language versions
 - **The `iron-mint` command** for easy management
 
 ## Uninstall
@@ -43,11 +44,35 @@ This will:
 
 ## Tools Available
 
-- **Languages**: rustup, nodejs, python3
+- **Version Management**: proto (for project-specific language versions)
 - **Modern CLI**: ripgrep (rg), fd, bat, eza, jq, fzf
 - **Editors**: vim, neovim  
-- **Build tools**: make, gcc
-- **Other**: tmux, git, curl, wget, imagemagick, mdbook, hugo
+- **Other**: tmux, git, curl, wget, imagemagick, pandoc
+
+## Project Tool Management
+
+Iron Mint uses **proto** to manage project-specific language versions. This means:
+
+- **Your shell**: Gets modern CLI tools + proto from Iron Mint
+- **Your projects**: Use standard version files (`.nvmrc`, `.python-version`, etc.) or `.prototools`
+- **proto**: Automatically reads these files and provides the right versions
+
+Example project setup:
+```bash
+cd my-project
+echo "20.11.0" > .nvmrc           # Node version
+echo "3.11" > .python-version    # Python version
+proto install                    # Install specified versions
+```
+
+Or use `.prototools` for multiple tools:
+```toml
+node = "20.11.0"
+python = "3.11"
+rust = "1.75.0"
+```
+
+proto respects existing version files, so teammates can use nvm/pyenv while you use proto.
 
 ## Package Management
 

@@ -1,0 +1,25 @@
+# Iron Mint default tool versions
+# This file is symlinked to ~/.prototools for global defaults
+
+# Language versions - use stable/LTS where possible
+node = "20"          # Current LTS
+python = "3.11"      # Stable release
+rust = "stable"      # Let rustup handle the details
+go = "1.21"          # Recent stable
+
+# Python ecosystem tools
+uv = "latest"        # Fast Python package manager
+poetry = "latest"    # Alternative Python package manager
+
+# Global settings
+[settings]
+auto-install = true
+detect-strategy = "prefer-prototools"
+
+# Tool-specific configuration
+[tools.node]
+bundled-npm = true
+
+# Environment variables for all tools
+[env]
+# Add any global environment variables here

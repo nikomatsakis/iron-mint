@@ -1,5 +1,5 @@
 {
-  description = "Niko's personal development environment";
+  description = "Personal development environment with modern CLI tools and proto for project version management";
   
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -42,19 +42,11 @@
             fzf        # fuzzy finder
             tmux       # terminal multiplexer
             
-            # Development languages and tools
-            nodejs_20
-            python3
-            rustup     # Rust toolchain installer
+            # Version management
+            proto          # Multi-language version manager
             
-            # Documentation and site generators
-            mdbook         # Rust-based markdown book generator
-            hugo           # Static site generator
+            # Documentation and site generators  
             pandoc
-            
-            # Build tools
-            gnumake
-            gcc
             
             # Network tools
             openssh
@@ -199,13 +191,37 @@ source ~/dev/iron-mint/config/multi-shrc'
 GITCONFIG
             fi
             
+            # Setup proto configuration symlink
+            if [ -f ~/.prototools ]; then
+                # Check if it's already our symlink
+                if [ -L ~/.prototools ] && [ "$(readlink ~/.prototools)" = "~/dev/iron-mint/config/prototools" ]; then
+                    echo "✅ Iron Mint proto configuration already linked"
+                else
+                    echo "📝 Backing up existing .prototools and creating Iron Mint symlink..."
+                    cp ~/.prototools "$backup_dir/"
+                    rm ~/.prototools
+                    ln -s ~/dev/iron-mint/config/prototools ~/.prototools
+                fi
+            else
+                echo "📝 Creating Iron Mint proto configuration symlink..."
+                # Mark that this file was created by Iron Mint (no existing file)
+                touch "$backup_dir/.prototools"
+                ln -s ~/dev/iron-mint/config/prototools ~/.prototools
+            fi
+            
+            # Install Iron Mint packages to user profile
+            echo "📦 Installing Iron Mint packages..."
+            if nix profile install ~/dev/iron-mint#default; then
+                echo "✅ Iron Mint packages installed successfully!"
+            else
+                echo "❌ Failed to install Iron Mint packages. You can try manually:"
+                echo "   nix profile install ~/dev/iron-mint#default"
+            fi
+            
             echo "✅ Iron Mint setup complete!"
             echo "📁 Backups saved to: $backup_dir"
             echo ""
-            echo "📦 To install Iron Mint packages, run:"
-            echo "   nix profile install ~/dev/iron-mint"
-            echo ""
-            echo "🔄 Then restart your shell or run: source ~/.zshrc"
+            echo "🔄 Restart your shell or run: source ~/.zshrc"
 EOF
             
             chmod +x $out/bin/setup-dotfiles
