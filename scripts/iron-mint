@@ -24,6 +24,7 @@ COMMANDS:
     
     update             Update to latest Iron Mint packages
     sync               Pull latest Iron Mint changes and update packages
+    rebuild            Rebuild Iron Mint after editing flake.nix
     
     edit               Add a package to Iron Mint itself (opens editor)
     
@@ -37,6 +38,7 @@ EXAMPLES:
     iron-mint remove docker        # Remove docker
     iron-mint sync                 # Pull git changes + update packages
     iron-mint edit                 # Add packages to Iron Mint itself
+    iron-mint rebuild              # Rebuild after editing flake.nix
 
 EOF
 }
@@ -81,7 +83,7 @@ list_packages() {
 update_iron_mint() {
     echo "🔄 Updating Iron Mint packages..."
     cd "$IRON_MINT_DIR"
-    nix profile upgrade '.*iron-mint.*'
+    nix profile upgrade iron-mint
     echo "✅ Iron Mint packages updated!"
 }
 
@@ -93,7 +95,7 @@ sync_iron_mint() {
     git pull
     
     echo "📦 Updating packages..."
-    nix profile upgrade '.*iron-mint.*'
+    nix profile upgrade iron-mint
     
     echo "✅ Sync complete!"
 }
@@ -105,10 +107,26 @@ edit_iron_mint() {
     echo "1. Find the 'paths = with pkgs; [' section"
     echo "2. Add your package to the list"
     echo "3. Save and exit"
-    echo "4. Run 'iron-mint sync' to apply changes"
+    echo "4. Run 'iron-mint rebuild' to apply changes"
     echo ""
     
-    ${EDITOR:-vim} "$IRON_MINT_DIR/flake.nix"
+    cd "$IRON_MINT_DIR"
+    ${EDITOR:-vim} flake.nix
+}
+
+rebuild_iron_mint() {
+    echo "🔨 Rebuilding Iron Mint packages..."
+    cd "$IRON_MINT_DIR"
+    
+    if git status --porcelain | grep -q .; then
+        echo "📝 Local changes detected - rebuilding from working directory"
+    fi
+    
+    echo "📦 Upgrading profile..."
+    nix profile upgrade iron-mint
+    
+    echo "✅ Rebuild complete!"
+    echo "💡 New packages will be available in new terminal sessions"
 }
 
 install_iron_mint() {
@@ -320,6 +338,9 @@ case "${1:-help}" in
         ;;
     sync)
         sync_iron_mint
+        ;;
+    rebuild)
+        rebuild_iron_mint
         ;;
     edit)
         edit_iron_mint

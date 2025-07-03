@@ -54,6 +54,9 @@
             
             # Image processing
             imagemagick
+            
+            # Container tools
+            podman
           ];
         };
         
