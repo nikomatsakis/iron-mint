@@ -18,6 +18,7 @@ COMMANDS:
     install            Install Iron Mint on this system
     uninstall          Remove Iron Mint from this system
     
+    search <query>      Search for packages in nixpkgs
     add <package>       Add a package locally (just for you)
     remove <package>    Remove a local package
     list               Show all installed packages
@@ -34,6 +35,7 @@ COMMANDS:
 EXAMPLES:
     iron-mint install              # Install Iron Mint on new system
     iron-mint uninstall            # Remove Iron Mint completely
+    iron-mint search docker        # Search for docker-related packages
     iron-mint add docker           # Add docker locally
     iron-mint remove docker        # Remove docker
     iron-mint sync                 # Pull git changes + update packages
@@ -78,6 +80,37 @@ list_packages() {
     echo "📋 Installed packages:"
     echo ""
     nix profile list
+}
+
+search_packages() {
+    local query="$1"
+    if [[ -z "$query" ]]; then
+        echo "❌ Error: Search query required"
+        echo "Usage: iron-mint search <query>"
+        exit 1
+    fi
+    
+    echo "🔍 Searching nixpkgs for: $query"
+    echo ""
+    
+    # Use nix search to find packages
+    # The --json flag gives us structured output we can format nicely
+    if command -v jq &> /dev/null; then
+        # If jq is available, format the output nicely
+        nix search nixpkgs "$query" --json 2>/dev/null | jq -r '
+            to_entries | 
+            sort_by(.key) | 
+            .[] | 
+            "📦 \(.key | split(".") | last)\n   \(.value.description // "No description available")\n   Version: \(.value.version // "unknown")\n"
+        ' | head -50
+    else
+        # Fallback to plain text output
+        nix search nixpkgs "$query" 2>/dev/null | head -50
+    fi
+    
+    echo ""
+    echo "💡 To install a package: iron-mint add <package-name>"
+    echo "💡 For more results, try: nix search nixpkgs $query"
 }
 
 update_iron_mint() {
@@ -347,6 +380,9 @@ case "${1:-help}" in
         ;;
     uninstall)
         uninstall_iron_mint
+        ;;
+    search)
+        search_packages "$2"
         ;;
     add)
         add_package "$2"
