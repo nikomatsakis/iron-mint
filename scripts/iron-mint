@@ -89,7 +89,31 @@ update_iron_mint() {
 
 sync_iron_mint() {
     echo "🔄 Syncing with latest Iron Mint..."
-    cd "$IRON_MINT_DIR"
+    
+    # Use absolute path and verify directory exists
+    IRON_MINT_ABSOLUTE_DIR="$HOME/dev/iron-mint"
+    
+    if [ ! -d "$IRON_MINT_ABSOLUTE_DIR" ]; then
+        echo "❌ Error: Iron Mint directory not found at $IRON_MINT_ABSOLUTE_DIR"
+        exit 1
+    fi
+    
+    echo "📁 Using Iron Mint directory: $IRON_MINT_ABSOLUTE_DIR"
+    
+    # Change to the directory with error checking
+    if ! cd "$IRON_MINT_ABSOLUTE_DIR"; then
+        echo "❌ Error: Could not change to Iron Mint directory"
+        exit 1
+    fi
+    
+    # Verify we're in a git repository
+    if [ ! -d ".git" ]; then
+        echo "❌ Error: Not a git repository at $IRON_MINT_ABSOLUTE_DIR"
+        echo "   Current directory: $(pwd)"
+        echo "   Directory contents:"
+        ls -la
+        exit 1
+    fi
     
     echo "📥 Pulling latest changes..."
     git pull

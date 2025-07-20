@@ -1,0 +1,79 @@
+#!/bin/bash
+
+# This is a wrapper script to correctly run iron-mint sync
+# It ensures we're using the correct Iron Mint directory
+
+IRON_MINT_DIR="$HOME/dev/iron-mint"
+
+echo "🔄 Syncing with latest Iron Mint..."
+
+if [ ! -d "$IRON_MINT_DIR" ]; then
+    echo "❌ Error: Iron Mint directory not found at $IRON_MINT_DIR"
+    exit 1
+fi
+
+echo "📁 Using Iron Mint directory: $IRON_MINT_DIR"
+
+# Change to the directory with error checking
+if ! cd "$IRON_MINT_DIR"; then
+    echo "❌ Error: Could not change to Iron Mint directory"
+    exit 1
+fi
+
+# Verify we're in a git repository
+if [ ! -d ".git" ]; then
+    echo "❌ Error: Not a git repository at $IRON_MINT_DIR"
+    echo "   Current directory: $(pwd)"
+    echo "   Directory contents:"
+    ls -la
+    exit 1
+fi
+
+# Check for uncommitted changes
+if git status --porcelain | grep -q .; then
+    echo "⚠️  Uncommitted changes detected!"
+    echo "   Options:"
+    echo "   1. Stash changes (recommended)"
+    echo "   2. Commit changes"
+    echo "   3. Force pull (may lose changes)"
+    echo "   4. Cancel"
+    echo ""
+    echo -n "Choose option (1-4): "
+    read -r choice
+    
+    case "$choice" in
+        1)
+            echo "📦 Stashing changes..."
+            git stash
+            echo "📥 Pulling latest changes..."
+            git pull
+            echo "📦 Restoring changes..."
+            git stash pop
+            ;;
+        2)
+            echo "📝 Please commit your changes first:"
+            echo "   cd ~/dev/iron-mint"
+            echo "   git add ."
+            echo "   git commit -m \"Your commit message\""
+            echo "   iron-mint sync"
+            exit 1
+            ;;
+        3)
+            echo "⚠️  Force pulling (may overwrite local changes)..."
+            git reset --hard
+            git pull
+            ;;
+        *)
+            echo "❌ Sync cancelled."
+            exit 1
+            ;;
+    esac
+else
+    echo "📥 Pulling latest changes..."
+    git pull
+fi
+
+echo "📦 Updating packages..."
+nix profile upgrade '.*iron-mint.*'
+
+echo "✅ Sync complete!"

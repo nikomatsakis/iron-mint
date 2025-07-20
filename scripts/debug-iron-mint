@@ -1,0 +1,46 @@
+#!/bin/bash
+
+echo "=== Iron Mint Debug Info ==="
+echo "Current directory: $(pwd)"
+echo "Script location: $0"
+echo "Iron Mint directory: $HOME/dev/iron-mint"
+echo "Iron Mint exists: $([ -d $HOME/dev/iron-mint ] && echo 'Yes' || echo 'No')"
+echo "Iron Mint .git exists: $([ -d $HOME/dev/iron-mint/.git ] && echo 'Yes' || echo 'No')"
+echo "PATH: $PATH"
+echo "Which iron-mint: $(which iron-mint 2>/dev/null || echo 'Not found')"
+echo "==========================="
+
+# Try to find the iron-mint script
+possible_locations=(
+  "$HOME/dev/iron-mint/scripts/iron-mint"
+  "$HOME/.nix-profile/bin/iron-mint"
+  "/nix/var/nix/profiles/default/bin/iron-mint"
+)
+
+echo "Checking possible iron-mint locations:"
+for loc in "${possible_locations[@]}"; do
+  if [ -f "$loc" ]; then
+    echo "✅ Found at: $loc"
+    echo "   File type: $(file "$loc")"
+    if [ -x "$loc" ]; then
+      echo "   Is executable: Yes"
+    else
+      echo "   Is executable: No"
+    fi
+  else
+    echo "❌ Not found at: $loc"
+  fi
+done
+
+echo "==========================="
+echo "Trying to run git in Iron Mint directory:"
+if cd "$HOME/dev/iron-mint" 2>/dev/null; then
+  echo "Successfully changed to Iron Mint directory"
+  if git status 2>/dev/null; then
+    echo "Git status successful"
+  else
+    echo "Git status failed with exit code: $?"
+  fi
+else
+  echo "Failed to change to Iron Mint directory"
+fi
