@@ -20,7 +20,23 @@
           name = "iron-mint-tools";
           paths = with pkgs; [
             # Iron Mint maintenance script
-            (pkgs.writeScriptBin "iron-mint" (builtins.readFile ./scripts/iron-mint))
+            (pkgs.writeScriptBin "iron-mint" ''
+              #!/bin/bash
+              # Iron Mint wrapper script that uses the correct directory
+              
+              # Always use the user's Iron Mint directory, not the Nix store location
+              IRON_MINT_DIR="$HOME/dev/iron-mint"
+              
+              # Check if the Iron Mint directory exists
+              if [ ! -d "$IRON_MINT_DIR" ]; then
+                  echo "❌ Error: Iron Mint directory not found at $IRON_MINT_DIR"
+                  echo "   Please ensure Iron Mint is properly installed."
+                  exit 1
+              fi
+              
+              # Execute the actual iron-mint script from the user's directory
+              exec "$IRON_MINT_DIR/scripts/iron-mint" "$@"
+            '')
             # Core utilities
             bash
             zsh
@@ -28,6 +44,7 @@
             git
             curl
             wget
+            libiconv
             
             # Editors
             vim
