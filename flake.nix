@@ -58,6 +58,7 @@
             jq         # JSON processor
             fzf        # fuzzy finder
             tmux       # terminal multiplexer
+            github-cli # gh - GitHub CLI tool
             
             # Version management
             proto          # Multi-language version manager
