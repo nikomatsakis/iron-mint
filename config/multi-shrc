@@ -29,8 +29,8 @@ if [ -n "$ZSH_VERSION" ]; then
     # Initialize cursor
     echo -ne '\e[5 q'
 
-    # Simple pencil prompt
-    PROMPT='✏️  '
+    # Bold hostname prompt
+    PROMPT='%B%m.%b '
 
     # Enhanced history settings
     HISTSIZE=10000
@@ -45,8 +45,8 @@ elif [ -n "$BASH_VERSION" ]; then
     # Enable vi mode
     set -o vi
 
-    # Simple pencil prompt
-    PS1='✏️  '
+    # Bold hostname prompt
+    PS1='\[\e[1m\]\h.\[\e[0m\] '
 
     # Enhanced history settings
     HISTSIZE=10000
