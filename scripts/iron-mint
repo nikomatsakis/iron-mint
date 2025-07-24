@@ -116,7 +116,43 @@ search_packages() {
 update_iron_mint() {
     echo "🔄 Updating Iron Mint packages..."
     cd "$IRON_MINT_DIR"
+    
+    # Check if flake.lock exists and get its current state
+    local flake_lock_before=""
+    if [ -f "flake.lock" ]; then
+        flake_lock_before=$(md5sum flake.lock 2>/dev/null || md5 flake.lock 2>/dev/null || echo "")
+    fi
+    
+    # Update flake inputs to get newer package versions
+    echo "📥 Updating flake inputs..."
+    nix flake update
+    
+    # Check if flake.lock changed
+    local flake_lock_after=""
+    if [ -f "flake.lock" ]; then
+        flake_lock_after=$(md5sum flake.lock 2>/dev/null || md5 flake.lock 2>/dev/null || echo "")
+    fi
+    
+    # Rebuild with the updated packages
+    echo "🔨 Rebuilding with updated packages..."
     nix profile upgrade iron-mint
+    
+    # Show what changed if git is available
+    if command -v git &> /dev/null && [ -d .git ]; then
+        if [ "$flake_lock_before" != "$flake_lock_after" ]; then
+            echo ""
+            echo "📋 Package updates found:"
+            echo "   flake.lock has been updated with newer package versions"
+            echo ""
+            echo "💡 To commit these changes:"
+            echo "   git add flake.lock && git commit -m 'Update flake dependencies'"
+        else
+            echo ""
+            echo "✨ No new package updates available"
+            echo "   All packages are already at their latest versions"
+        fi
+    fi
+    
     echo "✅ Iron Mint packages updated!"
 }
 
