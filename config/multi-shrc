@@ -57,12 +57,8 @@ fi
 
 # Common configuration for both shells
 
-# Add Nix profile bin to PATH if it exists
-if [[ -d "$HOME/.nix-profile/bin" && ":$PATH:" != *":$HOME/.nix-profile/bin:"* ]]; then
-  export PATH="$HOME/.nix-profile/bin:$PATH"
-fi
-
 # Initialize proto for project-specific tool versions
+# This puts proto-managed tools at the FRONT of PATH, giving them highest priority
 if command -v proto >/dev/null 2>&1; then
   if [ -n "$ZSH_VERSION" ]; then
     eval "$(proto activate zsh)"

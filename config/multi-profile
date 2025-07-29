@@ -1,0 +1,9 @@
+# Iron Mint Profile Configuration
+# This file is sourced by ~/.zprofile or ~/.bash_profile when Iron Mint is installed
+# Works with both zsh and bash login shells
+
+# Add Iron Mint (Nix) tools to PATH with higher priority than Homebrew
+# This needs to happen in profile (login shell) so it's available before interactive shell starts
+if [[ -d "$HOME/.nix-profile/bin" && ":$PATH:" != *":$HOME/.nix-profile/bin:"* ]]; then
+  export PATH="$HOME/.nix-profile/bin:$PATH"
+fi

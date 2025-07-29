@@ -59,6 +59,9 @@
             fzf        # fuzzy finder
             tmux       # terminal multiplexer
             github-cli # gh - GitHub CLI tool
+            direnv     # directory-based environment management
+            just       # command runner (better make)
+            emacs      # text editor
             
             # Version management
             proto          # Multi-language version manager
@@ -185,6 +188,45 @@ source ~/dev/iron-mint/config/multi-shrc'
                 # Mark that this file was created by Iron Mint
                 touch "$backup_dir/$(basename "$rc_file")"
                 echo "$default_config" > "$rc_file"
+            fi
+            
+            # Configure shell-specific profile file for login shells
+            if [[ "$current_shell" == "zsh" ]]; then
+                profile_file="$HOME/.zprofile"
+                profile_name="zprofile"
+                default_profile_config='# Iron Mint development environment (login shell)
+source ~/dev/iron-mint/config/multi-profile'
+            elif [[ "$current_shell" == "bash" ]]; then
+                profile_file="$HOME/.bash_profile"
+                profile_name="bash_profile"
+                default_profile_config='# Iron Mint development environment (login shell)
+source ~/dev/iron-mint/config/multi-profile'
+            else
+                # Fallback to zsh profile for unknown shells
+                profile_file="$HOME/.zprofile"
+                profile_name="zprofile"
+                default_profile_config='# Iron Mint development environment (login shell)
+source ~/dev/iron-mint/config/multi-profile'
+            fi
+            
+            # Add Iron Mint configuration to existing profile file
+            if [ -f "$profile_file" ]; then
+                # Check if Iron Mint profile config is already sourced
+                if ! grep -q "iron-mint/config/multi-profile" "$profile_file"; then
+                    echo "📝 Adding Iron Mint configuration to existing .$profile_name..."
+                    # Backup the existing profile file before modifying
+                    cp "$profile_file" "$backup_dir/"
+                    echo "" >> "$profile_file"
+                    echo "# Iron Mint development environment (login shell)" >> "$profile_file"
+                    echo 'source ~/dev/iron-mint/config/multi-profile' >> "$profile_file"
+                else
+                    echo "✅ Iron Mint configuration already present in .$profile_name"
+                fi
+            else
+                echo "📝 Creating new .$profile_name with Iron Mint configuration..."
+                # Mark that this file was created by Iron Mint
+                touch "$backup_dir/$(basename "$profile_file")"
+                echo "$default_profile_config" > "$profile_file"
             fi
             
             # Add Iron Mint configuration to existing .gitconfig
