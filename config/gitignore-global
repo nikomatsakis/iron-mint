@@ -1,0 +1,35 @@
+# Iron Mint Global Git Ignore
+# This file is used as the global excludesfile for all git repositories
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.tmp
+*.temp
+
+# Editor temp files
+.swp
+.swo
+*~
+~*
+.#*
+\#*#
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Niko's specific pattern
+*-ndm.*

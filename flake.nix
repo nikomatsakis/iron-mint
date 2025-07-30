@@ -254,6 +254,17 @@ source ~/dev/iron-mint/config/multi-profile'
 GITCONFIG
             fi
             
+            # Setup global gitignore
+            echo "📝 Configuring global gitignore..."
+            if [ -f ~/.gitignore ]; then
+                echo "⚠️  Found existing ~/.gitignore - it will be bypassed by Iron Mint's global gitignore"
+                echo "   Backed up to $backup_dir/.gitignore"
+                echo "   You can manually add patterns from your old file to ~/dev/iron-mint/config/gitignore-global"
+                cp ~/.gitignore "$backup_dir/"
+            fi
+            git config --global core.excludesfile ~/dev/iron-mint/config/gitignore-global
+            echo "✅ Global gitignore configured"
+            
             # Setup proto configuration symlink
             if [ -f ~/.prototools ]; then
                 # Check if it's already our symlink
