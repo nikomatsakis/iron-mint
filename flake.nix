@@ -42,6 +42,7 @@
             zsh
             coreutils
             git
+            git-filter-repo  # Advanced git history rewriting tool
             curl
             wget
             libiconv
