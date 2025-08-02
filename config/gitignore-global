@@ -32,4 +32,5 @@ ehthumbs_vista.db
 *.sublime-workspace
 
 # Niko's specific pattern
-*-ndm.*
+ndm-*
+.ndm-*
