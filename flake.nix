@@ -255,15 +255,29 @@ source ~/dev/iron-mint/config/multi-profile'
 GITCONFIG
             fi
             
-            # Setup global gitignore
-            echo "📝 Configuring global gitignore..."
+            # Setup global gitignore by appending Iron Mint patterns to ~/.gitignore
             if [ -f ~/.gitignore ]; then
-                echo "⚠️  Found existing ~/.gitignore - it will be bypassed by Iron Mint's global gitignore"
-                echo "   Backed up to $backup_dir/.gitignore"
-                echo "   You can manually add patterns from your old file to ~/dev/iron-mint/config/gitignore-global"
-                cp ~/.gitignore "$backup_dir/"
+                # Check if Iron Mint patterns are already added
+                if ! grep -q "# Iron Mint global gitignore patterns" ~/.gitignore; then
+                    echo "📝 Adding Iron Mint gitignore patterns to existing ~/.gitignore..."
+                    # Backup the existing .gitignore before modifying
+                    cp ~/.gitignore "$backup_dir/"
+                    echo "" >> ~/.gitignore
+                    echo "# Iron Mint global gitignore patterns" >> ~/.gitignore
+                    cat ~/dev/iron-mint/config/gitignore-global | grep -v "^#" | grep -v "^$" >> ~/.gitignore
+                else
+                    echo "✅ Iron Mint gitignore patterns already present in ~/.gitignore"
+                fi
+            else
+                echo "📝 Creating ~/.gitignore with Iron Mint patterns..."
+                # Mark that this file was created by Iron Mint
+                touch "$backup_dir/.gitignore"
+                echo "# Iron Mint global gitignore patterns" > ~/.gitignore
+                cat ~/dev/iron-mint/config/gitignore-global | grep -v "^#" | grep -v "^$" >> ~/.gitignore
             fi
-            git config --global core.excludesfile ~/dev/iron-mint/config/gitignore-global
+            
+            # Set git to use ~/.gitignore as the global excludesfile
+            git config --global core.excludesfile ~/.gitignore
             echo "✅ Global gitignore configured"
             
             # Setup proto configuration symlink

@@ -31,6 +31,16 @@ ehthumbs_vista.db
 *.sublime-project
 *.sublime-workspace
 
+# Common cache directories
+.cache/
+*_cache/
+.fastembed_cache/
+__pycache__/
+.pytest_cache/
+node_modules/
+.npm/
+.yarn/
+
 # Niko's specific pattern
 ndm-*
 .ndm-*
