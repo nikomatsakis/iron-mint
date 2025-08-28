@@ -185,6 +185,21 @@ sync_iron_mint() {
     fi
     
     echo "📥 Pulling latest changes..."
+    
+    # Ensure we have dual remotes set up: HTTPS for pulling, SSH for pushing
+    current_origin=$(git remote get-url origin 2>/dev/null || echo "")
+    if [[ "$current_origin" == git@github.com:* ]]; then
+        echo "🔧 Setting up dual remotes for corporate compatibility..."
+        git remote rename origin ssh-origin 2>/dev/null || true
+        git remote add origin https://github.com/nikomatsakis/iron-mint.git 2>/dev/null || true
+        git remote set-url --push origin git@github.com:nikomatsakis/iron-mint.git
+    elif [[ "$current_origin" == https://github.com/* ]]; then
+        if ! git remote get-url --push origin 2>/dev/null | grep -q "git@github.com"; then
+            echo "🔧 Adding SSH push URL for development..."
+            git remote set-url --push origin git@github.com:nikomatsakis/iron-mint.git
+        fi
+    fi
+    
     git pull
     
     echo "📦 Updating packages..."
@@ -279,12 +294,34 @@ install_iron_mint() {
     if [ -d ~/dev/iron-mint ]; then
         echo "🔄 Updating existing iron-mint..."
         cd ~/dev/iron-mint
+        
+        # Set up dual remotes: HTTPS for pulling (corporate-friendly), SSH for pushing
+        current_origin=$(git remote get-url origin 2>/dev/null || echo "")
+        if [[ "$current_origin" == git@github.com:* ]]; then
+            echo "🔧 Setting up dual remotes for corporate compatibility..."
+            # Keep SSH as 'origin' for pushing
+            git remote rename origin ssh-origin 2>/dev/null || true
+            # Add HTTPS as 'origin' for pulling
+            git remote add origin https://github.com/nikomatsakis/iron-mint.git 2>/dev/null || true
+            # Set push URL to SSH, pull URL to HTTPS
+            git remote set-url --push origin git@github.com:nikomatsakis/iron-mint.git
+        elif [[ "$current_origin" == https://github.com/* ]]; then
+            # Already HTTPS, check if we need SSH remote for pushing
+            if ! git remote get-url --push origin 2>/dev/null | grep -q "git@github.com"; then
+                echo "🔧 Adding SSH push URL for development..."
+                git remote set-url --push origin git@github.com:nikomatsakis/iron-mint.git
+            fi
+        fi
+        
         git pull
     else
         echo "📁 Cloning iron-mint..."
         mkdir -p ~/dev
         git clone https://github.com/nikomatsakis/iron-mint.git ~/dev/iron-mint
         cd ~/dev/iron-mint
+        
+        echo "🔧 Setting up SSH push URL for development..."
+        git remote set-url --push origin git@github.com:nikomatsakis/iron-mint.git
     fi
     
     # Set up dotfiles
