@@ -65,7 +65,9 @@
             emacs      # text editor
             
             # Version management
-            proto          # Multi-language version manager
+            rustup
+            volta
+            uv
             
             # Documentation and site generators  
             pandoc
