@@ -57,12 +57,8 @@ fi
 
 # Common configuration for both shells
 
-# Initialize proto for project-specific tool versions
-# This puts proto-managed tools at the FRONT of PATH, giving them highest priority
-if command -v proto >/dev/null 2>&1; then
-  if [ -n "$ZSH_VERSION" ]; then
-    eval "$(proto activate zsh)"
-  elif [ -n "$BASH_VERSION" ]; then
-    eval "$(proto activate bash)"
-  fi
+# Initialize volta for Node.js version management
+if command -v volta >/dev/null 2>&1; then
+  export VOLTA_HOME="$HOME/.volta"
+  export PATH="$VOLTA_HOME/bin:$PATH"
 fi

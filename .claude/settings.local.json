@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rm:*)",
+      "Bash(nix profile upgrade:*)",
+      "Bash(echo $?)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
