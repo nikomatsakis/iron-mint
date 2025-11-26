@@ -5,7 +5,7 @@
 # Detect shell type
 if [ -n "$ZSH_VERSION" ]; then
     # Zsh configuration
-    
+
     # Enable vim keybindings
     bindkey -v
 
@@ -41,7 +41,7 @@ if [ -n "$ZSH_VERSION" ]; then
 
 elif [ -n "$BASH_VERSION" ]; then
     # Bash configuration
-    
+
     # Enable vi mode
     set -o vi
 
@@ -57,8 +57,27 @@ fi
 
 # Common configuration for both shells
 
-# Initialize volta for Node.js version management
-if command -v volta >/dev/null 2>&1; then
-  export VOLTA_HOME="$HOME/.volta"
-  export PATH="$VOLTA_HOME/bin:$PATH"
+# Cargo (Rust) - add to PATH if installed
+if [ -d "$HOME/.cargo/bin" ]; then
+    export PATH="$HOME/.cargo/bin:$PATH"
+fi
+
+# Volta (Node.js) - initialize if installed
+if [ -d "$HOME/.volta" ]; then
+    export VOLTA_HOME="$HOME/.volta"
+    export PATH="$VOLTA_HOME/bin:$PATH"
+fi
+
+# Iron Mint bin directory (for helper scripts like git-editor)
+if [ -d "$HOME/dev/iron-mint/bin" ]; then
+    export PATH="$HOME/dev/iron-mint/bin:$PATH"
+fi
+
+# Direnv - directory-based environment management
+if command -v direnv &> /dev/null; then
+    if [ -n "$ZSH_VERSION" ]; then
+        eval "$(direnv hook zsh)"
+    elif [ -n "$BASH_VERSION" ]; then
+        eval "$(direnv hook bash)"
+    fi
 fi

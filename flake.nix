@@ -65,12 +65,13 @@
             emacs      # text editor
             
             # Version management
-            rustup
             volta
             uv
             
             # Documentation and site generators  
             pandoc
+            pandoc-lua-filters    # Collection of lua filters for pandoc
+            hugo                  # Static site generator
             
             # Network tools
             openssh

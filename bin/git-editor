@@ -1,0 +1,44 @@
+#!/bin/bash
+# Smart git editor - picks the right editor based on terminal context
+
+# Check TERM_PROGRAM (set by VS Code, Zed, iTerm, etc.)
+case "$TERM_PROGRAM" in
+    vscode)
+        exec code --wait "$@"
+        ;;
+    zed)
+        exec zed --wait "$@"
+        ;;
+esac
+
+# Check GIT_TERMINAL_PROMPT and VSCODE_* vars (VS Code sets these)
+if [ -n "$VSCODE_GIT_IPC_HANDLE" ] || [ -n "$VSCODE_IPC_HOOK" ]; then
+    exec code --wait "$@"
+fi
+
+# Check for Zed-specific environment
+if [ -n "$ZED_TERM" ]; then
+    exec zed --wait "$@"
+fi
+
+# Fallback: check parent processes for editor hints
+# This catches cases where TERM_PROGRAM isn't set
+if command -v pgrep &> /dev/null; then
+    ppid=$$
+    for _ in 1 2 3 4 5; do
+        ppid=$(ps -o ppid= -p "$ppid" 2>/dev/null | tr -d ' ')
+        [ -z "$ppid" ] && break
+        pname=$(ps -o comm= -p "$ppid" 2>/dev/null)
+        case "$pname" in
+            *code*|*Code*)
+                exec code --wait "$@"
+                ;;
+            *zed*|*Zed*)
+                exec zed --wait "$@"
+                ;;
+        esac
+    done
+fi
+
+# Default to vim
+exec vim "$@"

@@ -5,7 +5,7 @@
     email = niko@alum.mit.edu
 
 [core]
-    editor = vim
+    editor = ~/dev/iron-mint/bin/git-editor
     autocrlf = input
 
 [init]
@@ -16,3 +16,11 @@
 
 [merge]
     conflictstyle = diff3
+
+[alias]
+    st = status
+    co = checkout
+    br = branch
+    ci = commit
+    unstage = reset HEAD --
+    last = log -1 HEAD
