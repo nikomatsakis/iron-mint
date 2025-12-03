@@ -1,0 +1,46 @@
+{
+  "tools": [
+    {
+      "name": "jq",
+      "description": "JSON processor (bootstrapped first)",
+      "brew": "jq",
+      "apt": "jq",
+      "dnf": "jq"
+    },
+    {
+      "name": "gh",
+      "description": "GitHub CLI",
+      "brew": "gh",
+      "apt": "gh",
+      "dnf": "gh"
+    },
+    {
+      "name": "ripgrep",
+      "description": "Fast grep alternative (rg)",
+      "brew": "ripgrep",
+      "apt": "ripgrep",
+      "dnf": "ripgrep"
+    },
+    {
+      "name": "fd",
+      "description": "Fast find alternative",
+      "brew": "fd",
+      "apt": "fd-find",
+      "dnf": "fd-find"
+    },
+    {
+      "name": "bat",
+      "description": "Cat with syntax highlighting",
+      "brew": "bat",
+      "apt": "bat",
+      "dnf": "bat"
+    },
+    {
+      "name": "fzf",
+      "description": "Fuzzy finder",
+      "brew": "fzf",
+      "apt": "fzf",
+      "dnf": "fzf"
+    }
+  ]
+}

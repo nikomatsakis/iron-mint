@@ -1,225 +1,129 @@
-# Iron Mint Design Principles & Tool Management
+# Iron Mint Design Principles
 
-**Context**: Iron Mint is Niko's personal development environment setup using Nix flakes, designed to provide a reproducible, comprehensive dev environment while respecting existing user configurations.
+**Context**: Iron Mint is Niko's personal development environment setup using simple shell scripts, designed to provide sensible defaults while respecting existing user configurations.
 
 ## Core Design Principles
 
-1. **📁 Centralized Configuration**: Keep as much configuration as possible in the `~/dev/iron-mint/` directory
-   - All custom configs live in `config/` subdirectory (vimrc, zshrc, gitconfig-dev, etc.)
-   - Nix flake defines the complete environment declaratively
+1. **📁 Centralized Configuration**: Keep configuration in `~/dev/iron-mint/`
+   - Custom configs live in `config/` subdirectory (vimrc, multi-shrc, gitconfig-dev, etc.)
+   - Helper scripts in `bin/` (like git-editor)
+   - Setup scripts in `scripts/`
    - Users can inspect, modify, and understand the full setup in one location
 
-2. **🏠 Preserve Existing Behavior**: Layer Iron Mint on top of user's existing setup, don't replace it
-   - **Dotfiles**: Append source lines to existing `.vimrc`, `.zshrc`, `.gitconfig` rather than replacing them
+2. **🏠 Preserve Existing Behavior**: Layer Iron Mint on top of user's existing setup
+   - **Dotfiles**: Append source lines to existing `.vimrc`, `.zshrc`, `.bashrc`, `.gitconfig` rather than replacing them
    - **PATH**: Preserve existing PATH, add Iron Mint tools alongside user's tools
    - **Conditional Git Config**: Only apply Iron Mint git settings to `~/dev/` directory using `includeIf`
-   - **Idempotent Setup**: Safe to run install multiple times without breaking existing configs
+   - **Idempotent Setup**: Safe to run setup multiple times without breaking existing configs
 
-3. **🔄 Comprehensive Backup & Restore**: Always provide a way back to the original state
+3. **🔄 Comprehensive Backup & Restore**: Always provide a way back
    - **Timestamped Backups**: Every dotfile change backed up to `~/.dotfiles-backup-YYYYMMDD-HHMMSS/`
-   - **Uninstall Script**: `--uninstall` flag provides guided restoration from backups  
-   - **Backup Validation**: Track which files were created vs. modified by Iron Mint
+   - **Uninstall Script**: `uninstall.sh` provides guided restoration from backups
    - **Non-destructive**: Never delete user data, only modify configuration files
 
-## Implementation Patterns
+## What Iron Mint Provides
 
-**Dotfiles Strategy**: Layered configuration approach
-- Existing user configs remain intact
-- Iron Mint configs sourced conditionally from `~/dev/iron-mint/config/`
-- Example: `.vimrc` gets `source ~/dev/iron-mint/config/vimrc` appended
-- Allows users to override Iron Mint settings in their existing configs
+Iron Mint focuses on **configuration**, not tool installation:
 
-**Nix Build Process**: 
-- `nix build .#dotfiles` generates setup script dynamically
-- Setup script embedded as heredoc in `flake.nix` for transparency
-- Single source of truth for all installation logic
+- **Vi keybindings** in your shell (`jk` to escape in zsh)
+- **Bold hostname prompt**: `hostname. `
+- **Smart git editor** - uses VS Code if in VS Code terminal, Zed if in Zed terminal, vim otherwise
+- **Sensible git defaults** - rebase on pull, diff3 merge style, useful aliases
+- **Direnv integration** - directory-based environment management
 
-**Safety Mechanisms**:
-- Check for existing configurations before modifying
-- Idempotent operations (safe to run multiple times)
-- Comprehensive backup system with guided restore process
-- Clear separation between user configs and Iron Mint configs
+## Tool Installation
+
+Iron Mint installs tools in two categories:
+
+### CLI Tools (via package manager)
+Defined in `config/tools.json` and installed by `scripts/install-tools.sh`:
+
+| Tool | Description |
+|------|-------------|
+| **jq** | JSON processor (bootstrapped first) |
+| **gh** | GitHub CLI |
+| **ripgrep** | Fast grep alternative (rg) |
+| **fd** | Fast find alternative |
+| **bat** | Cat with syntax highlighting |
+| **fzf** | Fuzzy finder |
+
+The script auto-detects brew/apt/dnf and uses the correct package name for each platform.
+
+To add a new tool, edit `config/tools.json`:
+```json
+{
+  "name": "tool-name",
+  "description": "What it does",
+  "brew": "brew-package-name",
+  "apt": "apt-package-name",
+  "dnf": "dnf-package-name"
+}
+```
+
+### Language Toolchains (custom installers)
+
+| Tool | Purpose | Installed By |
+|------|---------|--------------|
+| **rustup** | Rust toolchain management | `scripts/install-rustup.sh` |
+| **volta** | Node.js version management | `scripts/install-volta.sh` |
+| **direnv** | Directory-based environments | `scripts/install-direnv.sh` |
+
+## Directory Structure
+
+```
+iron-mint/
+├── install.sh          # curl entry point
+├── setup.sh            # main setup script (runs all scripts/)
+├── uninstall.sh        # guided restore from backups
+├── scripts/
+│   ├── install-tools.sh    # CLI tools from tools.json
+│   ├── install-rustup.sh
+│   ├── install-volta.sh
+│   ├── install-direnv.sh
+│   ├── configure-shell.sh
+│   └── configure-git.sh
+├── config/
+│   ├── tools.json      # CLI tools to install (cross-platform)
+│   ├── multi-shrc      # shell config (vi mode, prompt, PATH)
+│   ├── multi-profile   # login shell config
+│   ├── gitconfig-dev   # git config for ~/dev/
+│   ├── gitignore-global
+│   └── vimrc
+└── bin/
+    └── git-editor      # smart editor picker
+```
+
+## Shell Configuration
+
+`config/multi-shrc` is sourced by your shell RC file and provides:
+
+1. **Vi mode** with visual cursor feedback (block in normal, beam in insert)
+2. **Quick escape**: `jk` exits insert mode in zsh
+3. **History navigation**: `j`/`k` in normal mode searches history
+4. **Bold hostname prompt**
+5. **PATH additions** for Cargo, Volta, and Iron Mint bin/
+
+Works with both zsh and bash by detecting shell type at runtime.
+
+## Git Configuration
+
+`config/gitconfig-dev` is conditionally included for repos under `~/dev/`:
+
+- Smart editor selection via `bin/git-editor`
+- Rebase on pull (`pull.rebase = true`)
+- Better merge conflict style (`merge.conflictstyle = diff3`)
+- Useful aliases
+
+## Updating
+
+```bash
+cd ~/dev/iron-mint
+git pull
+./setup.sh
+```
+
+Or re-run the curl installer - it's idempotent.
 
 ---
 
-# PATH & Tool Management Architecture
-
-**Last Updated**: July 2025
-
-## 🎯 Vision & Goals
-
-Iron Mint implements a clean separation of tool management responsibilities:
-
-- **Iron Mint (Nix)**: Core system utilities and development tools
-- **Proto**: Project-specific toolchains based on config files (`.nvmrc`, `.python-version`, etc.)
-- **Clean separation**: No redundant tools, proper priority order, CI-compatible
-
-## 📊 Tool Priority Matrix
-
-| Priority | Source | Tools | Purpose |
-|----------|--------|-------|---------|
-| 🥇 **Highest** | Proto shims | `node`, `python`, `rust` | Project-specific versions |
-| 🥈 **Second** | Iron Mint (Nix) | `rg`, `pandoc`, `direnv`, `just`, `emacs`, `bat`, `fd`, `fzf`, etc. | Development utilities |
-| 🥉 **Third** | Homebrew | ImageMagick deps, system libraries | System dependencies |
-| 🏃 **Fallback** | macOS | `/usr/bin/git`, system tools | OS defaults |
-
-## 🔧 PATH Construction Process
-
-### Shell Loading Order (zsh)
-1. **`.zshenv`** (always loaded) → Loads Cargo
-2. **`.zprofile`** (login shells) → Loads Homebrew + **Iron Mint (Nix)**
-3. **`.zshrc`** (interactive shells) → Loads **Proto activation**
-
-### Final PATH Priority
-```bash
-# 1. Proto tools (project-specific) - HIGHEST PRIORITY
-/Users/nikomat/.proto/activate-start
-/Users/nikomat/.proto/shims
-/Users/nikomat/.proto/tools/python/3.11.13/bin
-/Users/nikomat/.proto/tools/node/20.19.4/bin
-/Users/nikomat/.proto/bin
-
-# 2. Iron Mint tools (Nix) - SECOND PRIORITY  
-/Users/nikomat/.nix-profile/bin
-
-# 3. Homebrew tools - THIRD PRIORITY
-/opt/homebrew/bin
-/opt/homebrew/sbin
-
-# 4. System tools - FALLBACK
-/usr/local/bin
-/usr/bin
-/bin
-# ... etc
-```
-
-## 🛠 Configuration Files
-
-### `.zprofile` - Login Shell Setup
-```bash
-# Homebrew environment
-eval "$(/opt/homebrew/bin/brew shellenv)"
-
-# Iron Mint (Nix) tools - higher priority than Homebrew
-if [[ -d "$HOME/.nix-profile/bin" && ":$PATH:" != *":$HOME/.nix-profile/bin:"* ]]; then
-  export PATH="$HOME/.nix-profile/bin:$PATH"
-fi
-```
-
-### `~/dev/iron-mint/config/multi-shrc` - Interactive Shell Setup
-```bash
-# Proto activation - prepends to PATH for highest priority
-if command -v proto >/dev/null 2>&1; then
-  if [ -n "$ZSH_VERSION" ]; then
-    eval "$(proto activate zsh)"
-  elif [ -n "$BASH_VERSION" ]; then
-    eval "$(proto activate bash)"
-  fi
-fi
-```
-
-## 🧪 Verification Commands
-
-### Check Tool Sources
-```bash
-# Should show Nix paths
-which rg pandoc direnv just emacs
-
-# Should show Proto shims  
-which node python
-
-# Test project-specific versions
-cd project-with-nvmrc && node --version  # Project version
-cd ~ && node --version                   # Global version
-```
-
-### Expected Output
-```bash
-rg      → /Users/nikomat/.nix-profile/bin/rg (Nix)
-pandoc  → /Users/nikomat/.nix-profile/bin/pandoc (Nix)  
-direnv  → /Users/nikomat/.nix-profile/bin/direnv (Nix)
-just    → /Users/nikomat/.nix-profile/bin/just (Nix)
-emacs   → /Users/nikomat/.nix-profile/bin/emacs (Nix)
-node    → /Users/nikomat/.proto/shims/node (Proto)
-python  → /Users/nikomat/.proto/shims/python (Proto)
-```
-
-## 🔄 Proto Project Integration
-
-### How It Works
-1. **Project declares needs**: `.nvmrc`, `.python-version`, etc.
-2. **Proto detects context**: Reads config files in current directory
-3. **Auto-installs versions**: `proto install` in project directory
-4. **Shims route correctly**: Proto shims automatically use project-specific versions
-
-### CI/CD Compatibility
-```bash
-# In any project directory
-proto install  # Installs all tools specified in config files
-node --version  # Uses project-specific version
-```
-
-### Example Workflow
-```bash
-# Create test project
-mkdir test-project && cd test-project
-echo "18.20.0" > .nvmrc
-echo "3.10" > .python-version
-
-# Install project tools
-proto install
-
-# Verify project-specific versions
-node --version   # v18.20.0
-python --version # Python 3.10.18
-
-# Outside project uses global versions
-cd ~ 
-node --version   # v20.19.4 (global)
-python --version # Python 3.11.13 (global)
-```
-
-## 🧹 Maintenance & Cleanup
-
-### Adding New Tools to Iron Mint
-1. Edit `~/dev/iron-mint/flake.nix`
-2. Add tool to the `paths = with pkgs;` list
-3. Rebuild: `cd ~/dev/iron-mint && nix build`
-4. Upgrade: `nix profile upgrade iron-mint`
-
-### Removing Redundant Homebrew Packages
-```bash
-# Check what Iron Mint provides
-ls ~/.nix-profile/bin/ | grep -E "(rg|pandoc|direnv|just|emacs)"
-
-# Remove from Homebrew if available in Nix
-brew uninstall ripgrep pandoc direnv just emacs
-```
-
-### Troubleshooting PATH Issues
-```bash
-# Check PATH construction step by step
-echo "=== After .zprofile ==="
-eval "$(/opt/homebrew/bin/brew shellenv)"
-export PATH="$HOME/.nix-profile/bin:$PATH"
-echo $PATH | tr ":" "\n" | head -5
-
-echo "=== After proto activate ==="
-eval "$(proto activate zsh)"
-echo $PATH | tr ":" "\n" | head -10
-```
-
-## 🎉 Benefits Achieved
-
-✅ **Clean separation of concerns** - Each tool source has a clear purpose  
-✅ **Project-specific toolchains** - Automatic version switching based on project config  
-✅ **CI/CD compatibility** - `proto install` works in any project  
-✅ **No version conflicts** - Proper priority order prevents tool confusion  
-✅ **Reproducible environments** - Nix ensures consistent tool versions  
-✅ **Respectful of existing setup** - Layers on top without breaking user configs
-
-**Recognition Signal**: When working on environment setup or configuration management projects, apply these principles to respect user agency while providing powerful defaults.
-
----
-
-*Last updated: July 2025*
+*Last updated: December 2025*

@@ -50,6 +50,10 @@ echo ""
 
 # Run component scripts
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+"$SCRIPTS_DIR/install-tools.sh"
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 "$SCRIPTS_DIR/install-rustup.sh"
 
 echo ""
