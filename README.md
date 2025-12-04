@@ -10,10 +10,11 @@ curl -fsSL https://raw.githubusercontent.com/nikomatsakis/iron-mint/main/install
 
 This will:
 1. Clone Iron Mint to `~/dev/iron-mint/`
-2. Install **rustup** (Rust toolchain)
-3. Install **volta** (Node.js version manager)
-4. Configure your shell (bash/zsh) with vi keybindings
-5. Configure git with smart editor detection
+2. Install CLI tools (gh, ripgrep, fd, bat, fzf, jq)
+3. Install **rustup** (Rust toolchain)
+4. Install **volta** (Node.js version manager)
+5. Configure your shell (bash/zsh) with vi keybindings
+6. Configure git with smart editor detection
 
 Works on **macOS**, **Linux**, and **WSL**.
 
@@ -44,6 +45,8 @@ Or just re-run the curl command - it's idempotent.
 
 This shows you all available backups and lets you restore your original configuration.
 
+**Note:** Uninstall restores your shell/git configuration but does not remove installed CLI tools (gh, ripgrep, etc.) - those are generally useful to keep around.
+
 ## Structure
 
 ```
@@ -52,11 +55,13 @@ iron-mint/
 ├── setup.sh            # main setup script
 ├── uninstall.sh        # guided restore
 ├── scripts/
+│   ├── install-tools.sh    # CLI tools from tools.json
 │   ├── install-rustup.sh
 │   ├── install-volta.sh
 │   ├── configure-shell.sh
 │   └── configure-git.sh
 ├── config/
+│   ├── tools.json      # CLI tools to install (cross-platform)
 │   ├── multi-shrc      # shell config (vi mode, prompt, PATH)
 │   ├── multi-profile   # login shell config
 │   ├── gitconfig-dev   # git config for ~/dev/

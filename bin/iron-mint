@@ -1,0 +1,62 @@
+#!/bin/bash
+# Iron Mint CLI
+
+set -e
+
+IRON_MINT_DIR="$HOME/dev/iron-mint"
+
+show_help() {
+    cat << 'EOF'
+iron-mint - Personal development environment setup
+
+Usage: iron-mint <command>
+
+Commands:
+    setup       Run full setup (install tools, configure shell & git)
+    sync        Sync configuration only (shell & git, no tool installation)
+    uninstall   Restore original configuration from backups
+
+Options:
+    -h, --help  Show this help message
+
+Examples:
+    iron-mint setup      # Full setup including tool installation
+    iron-mint sync       # Just sync config changes (e.g., after editing gitignore-global)
+EOF
+}
+
+cmd_setup() {
+    exec "$IRON_MINT_DIR/setup.sh"
+}
+
+cmd_sync() {
+    echo "🔄 Syncing Iron Mint configuration..."
+    "$IRON_MINT_DIR/scripts/configure-shell.sh"
+    "$IRON_MINT_DIR/scripts/configure-git.sh"
+    echo "✅ Configuration synced"
+}
+
+cmd_uninstall() {
+    exec "$IRON_MINT_DIR/uninstall.sh"
+}
+
+# Main
+case "${1:-}" in
+    setup)
+        cmd_setup
+        ;;
+    sync)
+        cmd_sync
+        ;;
+    uninstall)
+        cmd_uninstall
+        ;;
+    -h|--help|"")
+        show_help
+        ;;
+    *)
+        echo "Unknown command: $1"
+        echo "Run 'iron-mint --help' for usage"
+        exit 1
+        ;;
+esac

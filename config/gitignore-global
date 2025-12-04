@@ -44,3 +44,4 @@ node_modules/
 # Niko's specific pattern
 ndm-*
 .ndm-*
+.sparkle-space
