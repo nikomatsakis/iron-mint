@@ -49,13 +49,14 @@ fi
 # Configure global gitignore
 echo "   📝 Configuring global gitignore..."
 
-MARKER="# iron-mint"
+START_MARKER="# >>> iron-mint >>>"
+END_MARKER="# <<< iron-mint <<<"
 
 if [ -f "$HOME/.gitignore" ]; then
-    # Remove existing Iron Mint patterns
-    if grep -q "$MARKER" "$HOME/.gitignore"; then
+    # Remove existing Iron Mint section if present
+    if grep -q "$START_MARKER" "$HOME/.gitignore"; then
         backup_file "$HOME/.gitignore"
-        grep -v "$MARKER" "$HOME/.gitignore" > "$HOME/.gitignore.tmp"
+        sed "/$START_MARKER/,/$END_MARKER/d" "$HOME/.gitignore" > "$HOME/.gitignore.tmp"
         mv "$HOME/.gitignore.tmp" "$HOME/.gitignore"
         echo "   🔄 Removed old Iron Mint patterns"
     fi
@@ -66,11 +67,13 @@ else
     touch "$BACKUP_DIR/.gitignore.created"
 fi
 
-# Append fresh Iron Mint patterns (tag each line)
-# Skip comments and empty lines from source, add marker to each pattern
-grep -v "^#" "$IRON_MINT_DIR/config/gitignore-global" | grep -v "^$" | while read -r pattern; do
-    echo "$pattern $MARKER"
-done >> "$HOME/.gitignore"
+# Append fresh Iron Mint patterns in marked block
+{
+    echo ""
+    echo "$START_MARKER"
+    cat "$IRON_MINT_DIR/config/gitignore-global"
+    echo "$END_MARKER"
+} >> "$HOME/.gitignore"
 echo "   ✅ Added Iron Mint patterns to .gitignore"
 
 # Set global excludesfile

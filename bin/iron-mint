@@ -14,6 +14,7 @@ Usage: iron-mint <command>
 Commands:
     setup       Run full setup (install tools, configure shell & git)
     sync        Sync configuration only (shell & git, no tool installation)
+    gitignore   Edit global gitignore patterns (auto-syncs after saving)
     uninstall   Restore original configuration from backups
 
 Options:
@@ -36,6 +37,19 @@ cmd_sync() {
     echo "✅ Configuration synced"
 }
 
+cmd_gitignore() {
+    local pattern="$1"
+    if [ -n "$pattern" ]; then
+        echo "$pattern" >> "$IRON_MINT_DIR/config/gitignore-global"
+        echo "Added: $pattern"
+    else
+        ${EDITOR:-vim} "$IRON_MINT_DIR/config/gitignore-global"
+    fi
+    echo "🔄 Syncing gitignore..."
+    "$IRON_MINT_DIR/scripts/configure-git.sh" 2>&1 | grep -E "(gitignore|excludesfile)"
+    echo "✅ Done"
+}
+
 cmd_uninstall() {
     exec "$IRON_MINT_DIR/uninstall.sh"
 }
@@ -47,6 +61,9 @@ case "${1:-}" in
         ;;
     sync)
         cmd_sync
+        ;;
+    gitignore)
+        cmd_gitignore "$2"
         ;;
     uninstall)
         cmd_uninstall

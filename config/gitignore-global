@@ -45,3 +45,5 @@ node_modules/
 ndm-*
 .ndm-*
 .sparkle-space
+.fastembed_cache
+mcp-sparkle.log
