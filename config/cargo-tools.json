@@ -1,0 +1,6 @@
+[
+  "mdbook",
+  "mdbook-mermaid",
+  "tokio-console",
+  "just"
+]

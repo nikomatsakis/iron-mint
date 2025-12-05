@@ -15,14 +15,59 @@ Commands:
     setup       Run full setup (install tools, configure shell & git)
     sync        Sync configuration only (shell & git, no tool installation)
     gitignore   Edit global gitignore patterns (auto-syncs after saving)
+    tools       Manage CLI tools (list, add)
+    cargo       Manage Cargo tools (list, add)
     uninstall   Restore original configuration from backups
 
 Options:
     -h, --help  Show this help message
 
 Examples:
-    iron-mint setup      # Full setup including tool installation
-    iron-mint sync       # Just sync config changes (e.g., after editing gitignore-global)
+    iron-mint setup                     # Full setup including tool installation
+    iron-mint sync                      # Just sync config changes
+    iron-mint tools list                # Show configured tools
+    iron-mint tools add foo --brew foo  # Add or update a tool
+    iron-mint cargo list                # Show configured cargo tools
+    iron-mint cargo add mdbook          # Add a cargo tool
+EOF
+}
+
+show_cargo_help() {
+    cat << 'EOF'
+iron-mint cargo - Manage Cargo tools (installed via cargo-binstall)
+
+Usage: iron-mint cargo <command>
+
+Commands:
+    list            List all configured cargo tools
+    add <crate>     Add a cargo tool
+
+Examples:
+    iron-mint cargo list
+    iron-mint cargo add mdbook
+EOF
+}
+
+show_tools_help() {
+    cat << 'EOF'
+iron-mint tools - Manage CLI tools
+
+Usage: iron-mint tools <command>
+
+Commands:
+    list                    List all configured tools
+    add <name> [options]    Add or update a tool
+
+Add options:
+    --desc "description"    Tool description
+    --brew <package>        Homebrew package name
+    --apt <package>         APT package name (Debian/Ubuntu)
+    --dnf <package>         DNF package name (Fedora/RHEL)
+
+Examples:
+    iron-mint tools list
+    iron-mint tools add gh --desc "GitHub CLI" --brew gh --apt gh --dnf gh
+    iron-mint tools add ripgrep --apt ripgrep  # Update just the apt package
 EOF
 }
 
@@ -54,6 +99,117 @@ cmd_uninstall() {
     exec "$IRON_MINT_DIR/uninstall.sh"
 }
 
+cmd_cargo() {
+    local cargo_json="$IRON_MINT_DIR/config/cargo-tools.json"
+    local subcmd="${1:-}"
+    shift || true
+
+    case "$subcmd" in
+        list)
+            jq -r '.[]' "$cargo_json" | sed 's/^/  /'
+            ;;
+        add)
+            local name="${1:-}"
+            if [ -z "$name" ]; then
+                echo "Error: crate name required"
+                echo "Usage: iron-mint cargo add <crate>"
+                exit 1
+            fi
+
+            # Add to list if not already there
+            if ! jq -e --arg name "$name" 'index($name) != null' "$cargo_json" > /dev/null; then
+                jq --arg name "$name" '. += [$name]' "$cargo_json" > "$cargo_json.tmp"
+                mv "$cargo_json.tmp" "$cargo_json"
+                echo "Added: $name"
+            fi
+
+            # Install it
+            "$IRON_MINT_DIR/scripts/install-cargo-tools.sh"
+            ;;
+        -h|--help|"")
+            show_cargo_help
+            ;;
+        *)
+            echo "Unknown cargo command: $subcmd"
+            show_cargo_help
+            exit 1
+            ;;
+    esac
+}
+
+cmd_tools() {
+    local tools_json="$IRON_MINT_DIR/config/tools.json"
+    local subcmd="${1:-}"
+    shift || true
+
+    case "$subcmd" in
+        list)
+            # Pretty print tools list
+            jq -r '.tools[] | "  \(.name): \(.description // "no description")"' "$tools_json"
+            ;;
+        add)
+            local name="${1:-}"
+            if [ -z "$name" ]; then
+                echo "Error: tool name required"
+                echo "Usage: iron-mint tools add <name> [--desc ...] [--brew ...] [--apt ...] [--dnf ...]"
+                exit 1
+            fi
+            shift
+
+            # Parse options
+            local desc="" brew="" apt="" dnf=""
+            while [ $# -gt 0 ]; do
+                case "$1" in
+                    --desc) desc="$2"; shift 2 ;;
+                    --brew) brew="$2"; shift 2 ;;
+                    --apt) apt="$2"; shift 2 ;;
+                    --dnf) dnf="$2"; shift 2 ;;
+                    *) echo "Unknown option: $1"; exit 1 ;;
+                esac
+            done
+
+            # Check if tool exists
+            local exists
+            exists=$(jq -r --arg name "$name" '.tools | map(.name == $name) | any' "$tools_json")
+
+            if [ "$exists" = "true" ]; then
+                # Update existing tool - only update provided fields
+                local filter=".tools |= map(if .name == \$name then . "
+                [ -n "$desc" ] && filter+="| .description = \$desc "
+                [ -n "$brew" ] && filter+="| .brew = \$brew "
+                [ -n "$apt" ] && filter+="| .apt = \$apt "
+                [ -n "$dnf" ] && filter+="| .dnf = \$dnf "
+                filter+="else . end)"
+
+                jq --arg name "$name" --arg desc "$desc" --arg brew "$brew" \
+                   --arg apt "$apt" --arg dnf "$dnf" "$filter" "$tools_json" > "$tools_json.tmp"
+                mv "$tools_json.tmp" "$tools_json"
+                echo "Updated: $name"
+            else
+                # Add new tool
+                local new_tool="{\"name\": \"$name\""
+                [ -n "$desc" ] && new_tool+=", \"description\": \"$desc\""
+                [ -n "$brew" ] && new_tool+=", \"brew\": \"$brew\""
+                [ -n "$apt" ] && new_tool+=", \"apt\": \"$apt\""
+                [ -n "$dnf" ] && new_tool+=", \"dnf\": \"$dnf\""
+                new_tool+="}"
+
+                jq --argjson tool "$new_tool" '.tools += [$tool]' "$tools_json" > "$tools_json.tmp"
+                mv "$tools_json.tmp" "$tools_json"
+                echo "Added: $name"
+            fi
+            ;;
+        -h|--help|"")
+            show_tools_help
+            ;;
+        *)
+            echo "Unknown tools command: $subcmd"
+            show_tools_help
+            exit 1
+            ;;
+    esac
+}
+
 # Main
 case "${1:-}" in
     setup)
@@ -64,6 +220,14 @@ case "${1:-}" in
         ;;
     gitignore)
         cmd_gitignore "$2"
+        ;;
+    tools)
+        shift
+        cmd_tools "$@"
+        ;;
+    cargo)
+        shift
+        cmd_cargo "$@"
         ;;
     uninstall)
         cmd_uninstall
