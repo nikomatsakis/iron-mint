@@ -41,6 +41,9 @@
       "brew": "fzf",
       "apt": "fzf",
       "dnf": "fzf"
+    },
+    {
+      "name": "pandoc"
     }
   ]
 }
