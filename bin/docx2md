@@ -27,6 +27,9 @@ if ! command -v pandoc &>/dev/null; then
 fi
 
 # Embed the Lua filter (pandoc-comment-extractor by qq3g7bad)
+# Original source (MIT licensed):
+#
+# https://github.com/qq3g7bad/pandoc-comment-extractor/blob/main/docx2md_add_comment.lua
 lua_filter=$(mktemp "${TMPDIR:-/tmp}/docx2md-filter-XXXXXX.lua")
 trap 'rm -f "$lua_filter"' EXIT
 
