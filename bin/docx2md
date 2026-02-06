@@ -1,0 +1,108 @@
+#!/usr/bin/env bash
+# docx2md - Convert a .docx file to GitHub-flavored markdown, preserving Word comments inline.
+# Usage: docx2md input.docx [output.md]
+#   If output.md is omitted, writes to stdout.
+# Requires: pandoc
+
+set -euo pipefail
+
+if [[ $# -lt 1 || "$1" == "-h" || "$1" == "--help" ]]; then
+  echo "Usage: docx2md input.docx [output.md]" >&2
+  echo "  Converts .docx to GitHub-flavored markdown with Word comments preserved inline." >&2
+  echo "  If output.md is omitted, writes to stdout." >&2
+  exit 1
+fi
+
+input="$1"
+output="${2:--}"
+
+if [[ ! -f "$input" ]]; then
+  echo "Error: file not found: $input" >&2
+  exit 1
+fi
+
+if ! command -v pandoc &>/dev/null; then
+  echo "Error: pandoc is required but not found in PATH" >&2
+  exit 1
+fi
+
+# Embed the Lua filter (pandoc-comment-extractor by qq3g7bad)
+lua_filter=$(mktemp "${TMPDIR:-/tmp}/docx2md-filter-XXXXXX.lua")
+trap 'rm -f "$lua_filter"' EXIT
+
+cat > "$lua_filter" << 'LUA_FILTER'
+local function format_comment_with_author(span)
+  local comment_parts = {}
+  for _, inline_el in ipairs(span.c or {}) do
+    table.insert(comment_parts, pandoc.utils.stringify(inline_el))
+  end
+
+  local comment_text = table.concat(comment_parts)
+  local author = nil
+
+  if span.attr and span.attr.attributes then
+    author = span.attr.attributes["author"]
+  end
+
+  if author and author ~= "" then
+    return "[" .. author .. "] " .. comment_text
+  end
+
+  return comment_text
+end
+
+function Header(el)
+  local comment = nil
+  local non_comment_content = {}
+
+  for _, data in ipairs(el.content) do
+    if data.t == "Span" and pandoc.List(data.attr.classes):includes("comment-start") then
+      comment = format_comment_with_author(data)
+    else
+      table.insert(non_comment_content, data)
+    end
+  end
+
+  local section_title = string.rep("#", el.level) .. " " .. pandoc.utils.stringify(non_comment_content)
+
+  if comment then
+    return {
+      pandoc.RawBlock("markdown", "<!-- " .. comment .. " -->\n" .. section_title)
+    }
+  end
+
+  return el
+end
+
+function Para(el)
+  local new_inlines = {}
+  local pending_comment = nil
+
+  for _, inline in ipairs(el.content) do
+    if inline.t == "Span" and inline.attr and inline.attr.classes then
+      local classes = pandoc.List(inline.attr.classes)
+
+      if classes:includes("comment-start") then
+        pending_comment = format_comment_with_author(inline)
+
+      elseif classes:includes("comment-end") then
+      else
+        table.insert(new_inlines, inline)
+      end
+
+    else
+      table.insert(new_inlines, inline)
+
+      if pending_comment then
+        table.insert(new_inlines, pandoc.RawInline("markdown", " <!-- " .. pending_comment .. " --> "))
+        pending_comment = nil
+      end
+    end
+  end
+
+  el.content = new_inlines
+  return el
+end
+LUA_FILTER
+
+pandoc "$input" -t gfm --track-changes=all --lua-filter="$lua_filter" -o "$output"
