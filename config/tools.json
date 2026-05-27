@@ -12,35 +12,41 @@
       "description": "GitHub CLI",
       "brew": "gh",
       "apt": "gh",
-      "dnf": "gh"
+      "dnf": "gh",
+      "github": "cli/cli"
     },
     {
       "name": "ripgrep",
       "description": "Fast grep alternative (rg)",
       "brew": "ripgrep",
       "apt": "ripgrep",
-      "dnf": "ripgrep"
+      "dnf": "ripgrep",
+      "cargo": "ripgrep",
+      "bin_name": "rg"
     },
     {
       "name": "fd",
       "description": "Fast find alternative",
       "brew": "fd",
       "apt": "fd-find",
-      "dnf": "fd-find"
+      "dnf": "fd-find",
+      "cargo": "fd-find"
     },
     {
       "name": "bat",
       "description": "Cat with syntax highlighting",
       "brew": "bat",
       "apt": "bat",
-      "dnf": "bat"
+      "dnf": "bat",
+      "cargo": "bat"
     },
     {
       "name": "fzf",
       "description": "Fuzzy finder",
       "brew": "fzf",
       "apt": "fzf",
-      "dnf": "fzf"
+      "dnf": "fzf",
+      "github": "junegunn/fzf"
     },
     {
       "name": "pandoc"

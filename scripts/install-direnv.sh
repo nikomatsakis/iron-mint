@@ -25,15 +25,26 @@ else
             fi
             ;;
         Linux*)
-            # Linux - check for package managers or use curl
+            # Linux - try package managers first, fall back to binary install
+            installed=false
             if command -v apt-get &> /dev/null; then
-                sudo apt-get update && sudo apt-get install -y direnv
+                if sudo apt-get update && sudo apt-get install -y direnv 2>/dev/null; then
+                    installed=true
+                fi
             elif command -v dnf &> /dev/null; then
-                sudo dnf install -y direnv
+                if sudo dnf install -y direnv 2>/dev/null; then
+                    installed=true
+                fi
             elif command -v pacman &> /dev/null; then
-                sudo pacman -S --noconfirm direnv
-            else
-                # Fallback to binary install
+                if sudo pacman -S --noconfirm direnv 2>/dev/null; then
+                    installed=true
+                fi
+            fi
+
+            if [ "$installed" = false ]; then
+                echo "   ↳ package manager failed, downloading binary..."
+                mkdir -p "$HOME/.local/bin"
+                export bin_path="$HOME/.local/bin"
                 curl -sfL https://direnv.net/install.sh | bash
             fi
             ;;

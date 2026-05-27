@@ -57,6 +57,11 @@ fi
 
 # Common configuration for both shells
 
+# Local bin (GitHub release binaries, pip, etc.)
+if [ -d "$HOME/.local/bin" ]; then
+    export PATH="$HOME/.local/bin:$PATH"
+fi
+
 # Cargo (Rust) - add to PATH if installed
 if [ -d "$HOME/.cargo/bin" ]; then
     export PATH="$HOME/.cargo/bin:$PATH"

@@ -5,7 +5,12 @@
       "Bash(nix profile upgrade:*)",
       "Bash(echo $?)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(bash setup.sh)",
+      "Bash(dnf search *)",
+      "Bash(dnf list *)",
+      "Bash(command -v cargo)",
+      "Bash(cargo --version)"
     ],
     "deny": [],
     "ask": []
