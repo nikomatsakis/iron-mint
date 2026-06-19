@@ -49,7 +49,26 @@
       "github": "junegunn/fzf"
     },
     {
-      "name": "pandoc"
+      "name": "pandoc",
+      "description": "Universal document converter",
+      "brew": "pandoc",
+      "apt": "pandoc",
+      "dnf": "pandoc"
+    },
+    {
+      "name": "poppler-utils",
+      "description": "PDF utilities (pdftotext, pdftoppm)",
+      "brew": "poppler",
+      "apt": "poppler-utils",
+      "dnf": "poppler-utils",
+      "bin_name": "pdftotext"
+    },
+    {
+      "name": "uv",
+      "description": "Fast Python package manager",
+      "brew": "uv",
+      "apt": "uv",
+      "dnf": "uv"
     }
   ]
 }

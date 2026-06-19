@@ -10,7 +10,9 @@
       "Bash(dnf search *)",
       "Bash(dnf list *)",
       "Bash(command -v cargo)",
-      "Bash(cargo --version)"
+      "Bash(cargo --version)",
+      "Bash(command -v uv)",
+      "Bash(chmod +x *)"
     ],
     "deny": [],
     "ask": []
