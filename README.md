@@ -34,10 +34,12 @@ Works on **macOS**, **Linux**, and **WSL**.
 ```bash
 cd ~/dev/iron-mint
 git pull
-./setup.sh
+iron-mint setup
 ```
 
-Or just re-run the curl command - it's idempotent.
+`iron-mint setup` is safe to run at any time: it installs any missing tools and reapplies the managed configuration without duplicating entries. To only refresh configuration, use `iron-mint sync`.
+
+You can also re-run the curl command; it is idempotent.
 
 ## Uninstalling
 

@@ -12,7 +12,10 @@
       "Bash(command -v cargo)",
       "Bash(cargo --version)",
       "Bash(command -v uv)",
-      "Bash(chmod +x *)"
+      "Bash(chmod +x *)",
+      "Bash(git -C /local/home/nikomat/dev/iron-mint diff --stat)",
+      "Bash(git -C /local/home/nikomat/dev/iron-mint status --short)",
+      "Bash(git *)"
     ],
     "deny": [],
     "ask": []
