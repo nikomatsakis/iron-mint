@@ -1,0 +1,4 @@
+#!/bin/bash
+session_name="${PWD#"$HOME"/}"
+session_name="${session_name//\//-}"
+tmux a -t "$session_name"

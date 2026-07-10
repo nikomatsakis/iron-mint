@@ -67,6 +67,11 @@ if [ -d "$HOME/.cargo/bin" ]; then
     export PATH="$HOME/.cargo/bin:$PATH"
 fi
 
+# Local - add to PATH if installed
+if [ -d "$HOME/.local/bin" ]; then
+    export PATH="$HOME/.local/bin:$PATH"
+fi
+
 # Volta (Node.js) - initialize if installed
 if [ -d "$HOME/.volta" ]; then
     export VOLTA_HOME="$HOME/.volta"
