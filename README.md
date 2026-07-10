@@ -14,13 +14,15 @@ This will:
 3. Install **rustup** (Rust toolchain)
 4. Install **volta** (Node.js version manager)
 5. Configure your shell (bash/zsh) with vi keybindings
-6. Configure git with smart editor detection
+6. Configure tmux with vi-style copy-mode and prompt keys
+7. Configure git with smart editor detection
 
 Works on **macOS**, **Linux**, and **WSL**.
 
 ## What You Get
 
 - **Vi keybindings** in your shell (`jk` to escape in zsh)
+- **Vi keybindings** in tmux copy mode and prompts
 - **Bold hostname prompt**: `hostname. `
 - **Rust** via rustup
 - **Node.js** via volta (with automatic project version switching)
@@ -59,11 +61,13 @@ iron-mint/
 │   ├── install-rustup.sh
 │   ├── install-volta.sh
 │   ├── configure-shell.sh
+│   ├── configure-tmux.sh
 │   └── configure-git.sh
 ├── config/
 │   ├── tools.json      # CLI tools to install (cross-platform)
 │   ├── multi-shrc      # shell config (vi mode, prompt, PATH)
 │   ├── multi-profile   # login shell config
+│   ├── tmux.conf        # tmux config (vi keys)
 │   ├── gitconfig-dev   # git config for ~/dev/
 │   ├── gitignore-global
 │   └── vimrc

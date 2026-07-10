@@ -19,6 +19,7 @@ if [ ${#backups[@]} -eq 0 ]; then
     echo "  - ~/.bashrc or ~/.zshrc"
     echo "  - ~/.bash_profile or ~/.zprofile"
     echo "  - ~/.vimrc"
+    echo "  - ~/.tmux.conf"
     echo "  - ~/.gitconfig"
     echo "  - ~/.gitignore"
     echo ""
