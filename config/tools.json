@@ -49,6 +49,13 @@
       "github": "junegunn/fzf"
     },
     {
+      "name": "hugo",
+      "description": "Static site generator",
+      "brew": "hugo",
+      "apt": "hugo",
+      "dnf": "hugo"
+    },
+    {
       "name": "pandoc",
       "description": "Universal document converter",
       "brew": "pandoc",

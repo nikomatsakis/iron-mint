@@ -46,6 +46,7 @@ Defined in `config/tools.json` and installed by `scripts/install-tools.sh`:
 | **fd** | Fast find alternative |
 | **bat** | Cat with syntax highlighting |
 | **fzf** | Fuzzy finder |
+| **Hugo** | Static site generator |
 
 The script auto-detects brew/apt/dnf and uses the correct package name for each platform.
 

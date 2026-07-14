@@ -10,7 +10,7 @@ curl -fsSL https://raw.githubusercontent.com/nikomatsakis/iron-mint/main/install
 
 This will:
 1. Clone Iron Mint to `~/dev/iron-mint/`
-2. Install CLI tools (gh, ripgrep, fd, bat, fzf, jq)
+2. Install CLI tools (gh, ripgrep, fd, bat, fzf, jq, Hugo)
 3. Install **rustup** (Rust toolchain)
 4. Install **volta** (Node.js version manager)
 5. Configure your shell (bash/zsh) with vi keybindings
@@ -27,6 +27,7 @@ Works on **macOS**, **Linux**, and **WSL**.
 - **Bold hostname prompt**: `hostname. `
 - **Rust** via rustup
 - **Node.js** via volta (with automatic project version switching)
+- **Hugo** for static site generation
 - **Vi as the Git editor**
 - **Sensible git defaults** - rebase on pull, diff3 merge style, useful aliases
 
