@@ -6,7 +6,7 @@
 
 1. **📁 Centralized Configuration**: Keep configuration in `~/dev/iron-mint/`
    - Custom configs live in `config/` subdirectory (vimrc, multi-shrc, gitconfig-dev, etc.)
-   - Helper scripts in `bin/` (like git-editor)
+   - Helper scripts in `bin/`
    - Setup scripts in `scripts/`
    - Users can inspect, modify, and understand the full setup in one location
 
@@ -27,7 +27,7 @@ Iron Mint focuses on **configuration**, not tool installation:
 
 - **Vi keybindings** in your shell (`jk` to escape in zsh)
 - **Bold hostname prompt**: `hostname. `
-- **Smart git editor** - uses VS Code if in VS Code terminal, Zed if in Zed terminal, vim otherwise
+- **Vi as the Git editor**
 - **Sensible git defaults** - rebase on pull, diff3 merge style, useful aliases
 - **Direnv integration** - directory-based environment management
 
@@ -89,8 +89,7 @@ iron-mint/
 │   ├── gitconfig-dev   # git config for ~/dev/
 │   ├── gitignore-global
 │   └── vimrc
-└── bin/
-    └── git-editor      # smart editor picker
+└── bin/                # command helpers
 ```
 
 ## Shell Configuration
@@ -109,7 +108,7 @@ Works with both zsh and bash by detecting shell type at runtime.
 
 `config/gitconfig-dev` is conditionally included for repos under `~/dev/`:
 
-- Smart editor selection via `bin/git-editor`
+- Vi as the Git editor
 - Rebase on pull (`pull.rebase = true`)
 - Better merge conflict style (`merge.conflictstyle = diff3`)
 - Useful aliases

@@ -15,7 +15,7 @@ This will:
 4. Install **volta** (Node.js version manager)
 5. Configure your shell (bash/zsh) with vi keybindings
 6. Configure tmux with vi-style copy-mode and prompt keys
-7. Configure git with smart editor detection
+7. Configure git to use `vi`
 
 Works on **macOS**, **Linux**, and **WSL**.
 
@@ -27,7 +27,7 @@ Works on **macOS**, **Linux**, and **WSL**.
 - **Bold hostname prompt**: `hostname. `
 - **Rust** via rustup
 - **Node.js** via volta (with automatic project version switching)
-- **Smart git editor** - uses VS Code if in VS Code terminal, Zed if in Zed terminal, vim otherwise
+- **Vi as the Git editor**
 - **Sensible git defaults** - rebase on pull, diff3 merge style, useful aliases
 
 ## Updating
@@ -74,8 +74,7 @@ iron-mint/
 │   ├── gitconfig-dev   # git config for ~/dev/
 │   ├── gitignore-global
 │   └── vimrc
-└── bin/
-    └── git-editor      # smart editor picker
+└── bin/                # command helpers
 ```
 
 ## Design Principles

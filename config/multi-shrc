@@ -86,7 +86,7 @@ if [ -d "$HOME/.volta" ]; then
     export PATH="$VOLTA_HOME/bin:$PATH"
 fi
 
-# Iron Mint bin directory (for helper scripts like git-editor)
+# Iron Mint bin directory (for helper scripts)
 if [ -d "$HOME/dev/iron-mint/bin" ]; then
     export PATH="$HOME/dev/iron-mint/bin:$PATH"
 fi

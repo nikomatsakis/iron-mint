@@ -1,7 +1,7 @@
 # Iron Mint Git Configuration
 
 [core]
-    editor = vim
+    editor = vi
     autocrlf = input
 
 [init]
