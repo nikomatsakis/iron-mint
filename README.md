@@ -22,6 +22,7 @@ Works on **macOS**, **Linux**, and **WSL**.
 ## What You Get
 
 - **Vi keybindings** in your shell (`jk` to escape in zsh)
+- **Persistent Bash history** shared across sessions, with a long on-disk history
 - **Vi keybindings** in tmux copy mode and prompts
 - **Bold hostname prompt**: `hostname. `
 - **Rust** via rustup
