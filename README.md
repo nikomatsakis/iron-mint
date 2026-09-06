@@ -30,6 +30,7 @@ Works on **macOS**, **Linux**, and **WSL**.
 - **Hugo** for static site generation
 - **Vi as the Git editor**
 - **Sensible git defaults** - rebase on pull, diff3 merge style, useful aliases
+- **`git worktrees` helper** - lists every worktree for the current repo with recent activity and HEAD commit
 
 ## Updating
 
@@ -42,6 +43,16 @@ iron-mint setup
 `iron-mint setup` is safe to run at any time: it installs any missing tools and reapplies the managed configuration without duplicating entries. To only refresh configuration, use `iron-mint sync`.
 
 You can also re-run the curl command; it is idempotent.
+
+## Git Worktree Orientation
+
+Once Iron Mint is on your `PATH`, you can run this inside any git worktree:
+
+```bash
+git worktrees
+```
+
+It prints every worktree for that repository, sorted by recent activity, along with the branch and current HEAD commit. The "last used" column is a best-effort timestamp derived from git metadata plus mtimes of currently dirty files.
 
 ## Uninstalling
 
@@ -75,7 +86,9 @@ iron-mint/
 │   ├── gitconfig-dev   # git config for ~/dev/
 │   ├── gitignore-global
 │   └── vimrc
-└── bin/                # command helpers
+└── bin/
+    ├── git-editor      # smart editor picker
+    └── git-worktrees   # recent worktree overview
 ```
 
 ## Design Principles

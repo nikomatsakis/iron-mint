@@ -1,0 +1,269 @@
+#!/bin/bash
+
+set -euo pipefail
+
+show_help() {
+    cat <<'EOF'
+git worktrees - show repo worktrees with recent activity
+
+Usage:
+    git worktrees
+
+This command must be run from inside a git worktree. It prints every
+worktree for the current repository, sorted by most recent activity.
+
+The "last used" timestamp is a best-effort value based on git metadata
+(HEAD reflog, index, FETCH_HEAD, etc.) plus the mtimes of files that are
+currently modified, staged, or untracked in each worktree.
+EOF
+}
+
+if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
+    show_help
+    exit 0
+fi
+
+if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    echo "error: run this inside a git worktree" >&2
+    exit 1
+fi
+
+CURRENT_ROOT="$(git rev-parse --show-toplevel)"
+
+stat_mtime() {
+    local path="$1"
+
+    [ -e "$path" ] || return 1
+
+    if stat -f %m "$path" >/dev/null 2>&1; then
+        stat -f %m "$path"
+    else
+        stat -c %Y "$path"
+    fi
+}
+
+format_time() {
+    local epoch="$1"
+
+    if date -r "$epoch" "+%Y-%m-%d %H:%M:%S" >/dev/null 2>&1; then
+        date -r "$epoch" "+%Y-%m-%d %H:%M:%S"
+    else
+        date -d "@$epoch" "+%Y-%m-%d %H:%M:%S"
+    fi
+}
+
+display_path() {
+    local path="$1"
+
+    case "$path" in
+        "$HOME"/*)
+            printf '~%s\n' "${path#$HOME}"
+            ;;
+        *)
+            printf '%s\n' "$path"
+            ;;
+    esac
+}
+
+git_dir_for_worktree() {
+    local worktree="$1"
+    local git_dir
+
+    git_dir="$(git -C "$worktree" rev-parse --git-dir)"
+    case "$git_dir" in
+        /*)
+            printf '%s\n' "$git_dir"
+            ;;
+        *)
+            printf '%s/%s\n' "$worktree" "$git_dir"
+            ;;
+    esac
+}
+
+max_epoch() {
+    local current="$1"
+    local candidate="$2"
+
+    if [ "$candidate" -gt "$current" ]; then
+        printf '%s\n' "$candidate"
+    else
+        printf '%s\n' "$current"
+    fi
+}
+
+last_activity_epoch() {
+    local worktree="$1"
+    local git_dir
+    local latest=0
+    local candidate
+    local relative_path
+    local file_path
+
+    git_dir="$(git_dir_for_worktree "$worktree")"
+
+    for candidate in \
+        "$worktree" \
+        "$git_dir" \
+        "$git_dir/HEAD" \
+        "$git_dir/index" \
+        "$git_dir/logs/HEAD" \
+        "$git_dir/FETCH_HEAD" \
+        "$git_dir/ORIG_HEAD" \
+        "$git_dir/MERGE_HEAD" \
+        "$git_dir/REBASE_HEAD" \
+        "$git_dir/CHERRY_PICK_HEAD" \
+        "$git_dir/BISECT_LOG"
+    do
+        if candidate="$(stat_mtime "$candidate" 2>/dev/null)"; then
+            latest="$(max_epoch "$latest" "$candidate")"
+        fi
+    done
+
+    while IFS= read -r -d '' relative_path; do
+        file_path="$worktree/$relative_path"
+        if candidate="$(stat_mtime "$file_path" 2>/dev/null)"; then
+            latest="$(max_epoch "$latest" "$candidate")"
+        fi
+    done < <(
+        git -C "$worktree" diff --name-only -z --relative 2>/dev/null
+        git -C "$worktree" diff --cached --name-only -z --relative 2>/dev/null
+        git -C "$worktree" ls-files --others --exclude-standard -z 2>/dev/null
+    )
+
+    printf '%s\n' "$latest"
+}
+
+sanitize_field() {
+    printf '%s' "$1" | tr '\t\r\n' '   '
+}
+
+emit_record() {
+    local worktree="$1"
+    local head="$2"
+    local branch="$3"
+    local state="$4"
+    local last_used_epoch
+    local last_used_display
+    local branch_display
+    local head_summary
+    local current_marker=" "
+
+    [ -n "$worktree" ] || return 0
+
+    if [ ! -d "$worktree" ]; then
+        printf '0\t \tmissing\t%s\t%s\t%s\n' \
+            "$(sanitize_field "$branch")" \
+            "$(sanitize_field "${head:0:12}")" \
+            "$(sanitize_field "$(display_path "$worktree") [$state]")" >> "$ROWS_FILE"
+        return 0
+    fi
+
+    last_used_epoch="$(last_activity_epoch "$worktree")"
+    if [ "$last_used_epoch" -gt 0 ]; then
+        last_used_display="$(format_time "$last_used_epoch")"
+    else
+        last_used_display="unknown"
+    fi
+
+    if [ "$worktree" = "$CURRENT_ROOT" ]; then
+        current_marker="*"
+    fi
+
+    if [ -n "$branch" ]; then
+        branch_display="${branch#refs/heads/}"
+    else
+        branch_display="(detached)"
+    fi
+
+    if [ -n "$state" ]; then
+        branch_display="$branch_display [$state]"
+    fi
+
+    if head_summary="$(git -C "$worktree" show -s --format='%h %s' "$head" 2>/dev/null)"; then
+        :
+    else
+        head_summary="${head:0:12}"
+    fi
+
+    printf '%s\t%s\t%s\t%s\t%s\t%s\n' \
+        "$last_used_epoch" \
+        "$current_marker" \
+        "$(sanitize_field "$last_used_display")" \
+        "$(sanitize_field "$branch_display")" \
+        "$(sanitize_field "$head_summary")" \
+        "$(sanitize_field "$(display_path "$worktree")")" >> "$ROWS_FILE"
+}
+
+ROWS_FILE="$(mktemp)"
+trap 'rm -f "$ROWS_FILE"' EXIT
+
+worktree_path=""
+head=""
+branch=""
+state=""
+
+while IFS= read -r line || [ -n "$line" ]; do
+    if [ -z "$line" ]; then
+        emit_record "$worktree_path" "$head" "$branch" "$state"
+        worktree_path=""
+        head=""
+        branch=""
+        state=""
+        continue
+    fi
+
+    case "$line" in
+        worktree\ *)
+            worktree_path="${line#worktree }"
+            ;;
+        HEAD\ *)
+            head="${line#HEAD }"
+            ;;
+        branch\ *)
+            branch="${line#branch }"
+            ;;
+        detached)
+            branch=""
+            ;;
+        locked*)
+            state="locked"
+            ;;
+        prunable*)
+            state="prunable"
+            ;;
+    esac
+done < <(git worktree list --porcelain)
+
+emit_record "$worktree_path" "$head" "$branch" "$state"
+
+if [ ! -s "$ROWS_FILE" ]; then
+    echo "No worktrees found."
+    exit 0
+fi
+
+{
+    printf 'CURRENT\tLAST USED\tBRANCH\tHEAD\tPATH\n'
+    sort -t "$(printf '\t')" -k1,1nr "$ROWS_FILE" | cut -f2-
+} | awk -F '\t' '
+    {
+        rows[NR, 1] = $1
+        rows[NR, 2] = $2
+        rows[NR, 3] = $3
+        rows[NR, 4] = $4
+        rows[NR, 5] = $5
+
+        for (i = 1; i <= 5; i++) {
+            width[i] = (length($i) > width[i]) ? length($i) : width[i]
+        }
+    }
+    END {
+        for (row = 1; row <= NR; row++) {
+            printf "%-*s  %-*s  %-*s  %-*s  %s\n",
+                width[1], rows[row, 1],
+                width[2], rows[row, 2],
+                width[3], rows[row, 3],
+                width[4], rows[row, 4],
+                rows[row, 5]
+        }
+    }
+'
