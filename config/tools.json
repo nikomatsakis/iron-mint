@@ -53,7 +53,8 @@
       "description": "Static site generator",
       "brew": "hugo",
       "apt": "hugo",
-      "dnf": "hugo"
+      "dnf": "hugo",
+      "github": "gohugoio/hugo"
     },
     {
       "name": "pandoc",

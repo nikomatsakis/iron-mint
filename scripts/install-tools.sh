@@ -75,7 +75,7 @@ install_via_github() {
 
     case "$(uname -m)" in
         x86_64)  arch="amd64" ;;
-        aarch64) arch="arm64" ;;
+        aarch64|arm64) arch="arm64" ;;
         *)       return 1 ;;
     esac
 
@@ -112,7 +112,7 @@ install_via_github() {
             local fzf_arch
             case "$(uname -m)" in
                 x86_64)  fzf_arch="amd64" ;;
-                aarch64) fzf_arch="arm64" ;;
+                aarch64|arm64) fzf_arch="arm64" ;;
             esac
             local url="https://github.com/junegunn/fzf/releases/download/v${version}/fzf-${version}-${os}_${fzf_arch}.tar.gz"
             local tmp
@@ -123,6 +123,104 @@ install_via_github() {
                 rm -rf "$tmp"
                 return 0
             fi
+            rm -rf "$tmp"
+            return 1
+            ;;
+        gohugoio/hugo)
+            local release_json
+            local version
+            local platform
+            local package_format
+            local asset_name
+            local asset_url
+            local checksums_url
+            local expected_checksum
+            local actual_checksum
+
+            case "$(uname -s)" in
+                Linux)
+                    platform="linux-${arch}"
+                    package_format="tar.gz"
+                    ;;
+                Darwin)
+                    platform="darwin-universal"
+                    package_format="pkg"
+                    ;;
+                *)      return 1 ;;
+            esac
+
+            if ! release_json=$(curl -sfL "https://api.github.com/repos/${repo}/releases/latest"); then
+                return 1
+            fi
+
+            version=$(printf '%s' "$release_json" | jq -r '.tag_name | ltrimstr("v")')
+            if [ -z "$version" ] || [ "$version" = "null" ]; then
+                return 1
+            fi
+
+            asset_name="hugo_${version}_${platform}.${package_format}"
+            asset_url=$(printf '%s' "$release_json" | jq -r --arg name "$asset_name" \
+                '.assets[] | select(.name == $name) | .browser_download_url' | head -n 1)
+            checksums_url=$(printf '%s' "$release_json" | jq -r --arg name "hugo_${version}_checksums.txt" \
+                '.assets[] | select(.name == $name) | .browser_download_url' | head -n 1)
+
+            if [ -z "$asset_url" ] || [ -z "$checksums_url" ]; then
+                return 1
+            fi
+
+            local tmp
+            tmp=$(mktemp -d)
+            if ! curl -sfL "$asset_url" -o "$tmp/$asset_name" || \
+               ! curl -sfL "$checksums_url" -o "$tmp/checksums.txt"; then
+                rm -rf "$tmp"
+                return 1
+            fi
+
+            expected_checksum=$(awk -v asset="$asset_name" '$2 == asset { print $1 }' "$tmp/checksums.txt")
+            if [ -z "$expected_checksum" ]; then
+                rm -rf "$tmp"
+                return 1
+            fi
+
+            if command -v sha256sum &> /dev/null; then
+                actual_checksum=$(sha256sum "$tmp/$asset_name" | awk '{ print $1 }')
+            elif command -v shasum &> /dev/null; then
+                actual_checksum=$(shasum -a 256 "$tmp/$asset_name" | awk '{ print $1 }')
+            else
+                rm -rf "$tmp"
+                return 1
+            fi
+
+            if [ "$actual_checksum" != "$expected_checksum" ]; then
+                echo "   ↳ checksum verification failed"
+                rm -rf "$tmp"
+                return 1
+            fi
+
+            case "$package_format" in
+                tar.gz)
+                    if tar xzf "$tmp/$asset_name" -C "$tmp" hugo 2>/dev/null; then
+                        cp "$tmp/hugo" "$install_dir/hugo"
+                        chmod +x "$install_dir/hugo"
+                        rm -rf "$tmp"
+                        return 0
+                    fi
+                    ;;
+                pkg)
+                    local expanded_dir="$tmp/expanded"
+                    local hugo_path
+                    if command -v pkgutil &> /dev/null && \
+                       pkgutil --expand-full "$tmp/$asset_name" "$expanded_dir" 2>/dev/null; then
+                        hugo_path=$(find "$expanded_dir" -type f -path '*/usr/local/bin/hugo' -print -quit)
+                        if [ -n "$hugo_path" ]; then
+                            cp "$hugo_path" "$install_dir/hugo"
+                            chmod +x "$install_dir/hugo"
+                            rm -rf "$tmp"
+                            return 0
+                        fi
+                    fi
+                    ;;
+            esac
             rm -rf "$tmp"
             return 1
             ;;
