@@ -49,6 +49,14 @@
       "github": "junegunn/fzf"
     },
     {
+      "name": "just",
+      "description": "Command runner for project tasks",
+      "brew": "just",
+      "apt": "just",
+      "dnf": "just",
+      "cargo": "just"
+    },
+    {
       "name": "hugo",
       "description": "Static site generator",
       "brew": "hugo",

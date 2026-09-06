@@ -46,6 +46,7 @@ Defined in `config/tools.json` and installed by `scripts/install-tools.sh`:
 | **fd** | Fast find alternative |
 | **bat** | Cat with syntax highlighting |
 | **fzf** | Fuzzy finder |
+| **just** | Command runner for project tasks |
 | **Hugo** | Static site generator |
 
 The script auto-detects brew/apt/dnf and uses the correct package name for each platform.
@@ -68,6 +69,7 @@ To add a new tool, edit `config/tools.json`:
 | **rustup** | Rust toolchain management | `scripts/install-rustup.sh` |
 | **volta** | Node.js version management | `scripts/install-volta.sh` |
 | **direnv** | Directory-based environments | `scripts/install-direnv.sh` |
+| **Configured Cargo tools** | Rust CLI utilities like `mdbook` | `scripts/install-cargo-tools.sh` |
 
 ## Directory Structure
 
@@ -79,12 +81,14 @@ iron-mint/
 ├── scripts/
 │   ├── install-tools.sh    # CLI tools from tools.json
 │   ├── install-rustup.sh
+│   ├── install-cargo-tools.sh
 │   ├── install-volta.sh
 │   ├── install-direnv.sh
 │   ├── configure-shell.sh
 │   └── configure-git.sh
 ├── config/
 │   ├── tools.json      # CLI tools to install (cross-platform)
+│   ├── cargo-tools.json # Rust CLI tools to install via cargo-binstall
 │   ├── multi-shrc      # shell config (vi mode, prompt, PATH)
 │   ├── multi-profile   # login shell config
 │   ├── gitconfig-dev   # git config for ~/dev/

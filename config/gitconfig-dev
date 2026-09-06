@@ -5,7 +5,7 @@
     email = niko@alum.mit.edu
 
 [core]
-    editor = vi
+    editor = ~/dev/iron-mint/bin/git-editor
     autocrlf = input
 
 [init]

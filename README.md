@@ -10,12 +10,13 @@ curl -fsSL https://raw.githubusercontent.com/nikomatsakis/iron-mint/main/install
 
 This will:
 1. Clone Iron Mint to `~/dev/iron-mint/`
-2. Install CLI tools (gh, ripgrep, fd, bat, fzf, jq, Hugo)
+2. Install CLI tools (gh, ripgrep, fd, bat, fzf, just, jq, Hugo)
 3. Install **rustup** (Rust toolchain)
-4. Install **volta** (Node.js version manager)
-5. Configure your shell (bash/zsh) with vi keybindings
-6. Configure tmux with vi-style copy-mode and prompt keys
-7. Configure git to use `vi`
+4. Install configured Cargo tools (for example `mdbook`)
+5. Install **volta** (Node.js version manager)
+6. Configure your shell (bash/zsh) with vi keybindings
+7. Configure tmux with vi-style copy-mode and prompt keys
+8. Configure git with smart editor detection
 
 Works on **macOS**, **Linux**, and **WSL**.
 
@@ -28,7 +29,7 @@ Works on **macOS**, **Linux**, and **WSL**.
 - **Rust** via rustup
 - **Node.js** via volta (with automatic project version switching)
 - **Hugo** for static site generation
-- **Vi as the Git editor**
+- **Smart git editor** - uses VS Code if in VS Code terminal, Zed if in Zed terminal, vim otherwise
 - **Sensible git defaults** - rebase on pull, diff3 merge style, useful aliases
 - **`git worktrees` helper** - lists every worktree for the current repo with recent activity and HEAD commit
 
@@ -62,7 +63,7 @@ It prints every worktree for that repository, sorted by recent activity, along w
 
 This shows you all available backups and lets you restore your original configuration.
 
-**Note:** Uninstall restores your shell/git configuration but does not remove installed CLI tools (gh, ripgrep, etc.) - those are generally useful to keep around.
+**Note:** Uninstall restores your shell/git configuration but does not remove installed CLI tools (gh, ripgrep, just, etc.) - those are generally useful to keep around.
 
 ## Structure
 
@@ -74,12 +75,14 @@ iron-mint/
 ├── scripts/
 │   ├── install-tools.sh    # CLI tools from tools.json
 │   ├── install-rustup.sh
+│   ├── install-cargo-tools.sh
 │   ├── install-volta.sh
 │   ├── configure-shell.sh
 │   ├── configure-tmux.sh
 │   └── configure-git.sh
 ├── config/
 │   ├── tools.json      # CLI tools to install (cross-platform)
+│   ├── cargo-tools.json # Rust CLI tools to install via cargo-binstall
 │   ├── multi-shrc      # shell config (vi mode, prompt, PATH)
 │   ├── multi-profile   # login shell config
 │   ├── tmux.conf        # tmux config (vi keys)
